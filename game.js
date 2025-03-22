@@ -1,18 +1,23 @@
+// Элементы интерфейса
 const logElement = document.getElementById("log");
+
+// После загрузки DOM
 document.addEventListener("DOMContentLoaded", function () {
   updateLocation();
   restoreDynamicButtons();
+  updateStats();
 });
 
+// Функция для логирования событий
 function logEvent(message) {
-  if (!logElement) return; // Защита от ошибок
+  if (!logElement) return;
   logElement.value += message + "\n";
-  logElement.scrollTop = logElement.scrollHeight; // Прокрутка вниз
+  logElement.scrollTop = logElement.scrollHeight;
 }
 
-// Тестирование
 logEvent("Добро пожаловать в Эвермор!");
 
+// Квесты
 const quests = {
   ancientArtifact: {
     id: "ancientArtifact",
@@ -26,7 +31,7 @@ const quests = {
 
 let activeQuests = [];
 
-// Объект персонажа
+// Объект игрока
 const player = {
   health: 100,
   strength: 10,
@@ -35,11 +40,13 @@ const player = {
   xp: 0,
   levelUpThreshold: 20,
   gold: 0,
+  alignment: undefined,
+  originalStrength: 10, // для временного эффекта в бою
 };
 
-// Базовый объект врага для сброса характеристик
+// Базовый объект врага
 const baseEnemy = {
-  name: "Тень_прошлого",
+  name: "тень_прошлого",
   health: 50,
   strength: 8,
   defense: 3,
@@ -49,29 +56,30 @@ const baseEnemy = {
 // Объект врага
 let enemy = { ...baseEnemy };
 
-// Функция для обновления характеристик в интерфейсе
+// Флаг для контроля активации способности "Поглощение души" в одном бою
+let enemyUsedSoulDrain = false;
+
+// Обновление статистик в интерфейсе
 function updateStats() {
   document.getElementById("health").textContent = player.health;
   document.getElementById("strength").textContent = player.strength;
   document.getElementById("defense").textContent = player.defense;
   document.getElementById("level").textContent = player.level;
+  document.getElementById("xp").textContent = player.xp;
 }
 
-// Инициализация характеристик при загрузке игры
-updateStats();
-
-// Тестирование изменения характеристик
-player.health -= 10; // Пример: Игрок теряет здоровье
+// Тестовое изменение характеристик
+player.health -= 10;
 logEvent("Вы потеряли 10 здоровья.");
 updateStats();
 
+// Функции работы с квестами
 function startQuest(questId) {
   const quest = quests[questId];
   if (!quest || quest.completed) {
     logEvent("Этот квест недоступен.");
     return;
   }
-
   activeQuests.push(quest);
   logEvent(`Вы приняли квест: "${quest.title}".`);
   logEvent(quest.description);
@@ -83,90 +91,80 @@ function completeQuest(questId) {
     logEvent("Этот квест уже завершён или недоступен.");
     return;
   }
-
   quest.completed = true;
   logEvent(`Вы выполнили квест: "${quest.title}"!`);
-  gainXP(quest.reward.xp); // Получаем опыт
-  player.gold = (player.gold || 0) + quest.reward.gold; // Получаем золото
-  updateStats(); // Обновляем характеристики игрока
+  gainXP(quest.reward.xp);
+  player.gold += quest.reward.gold;
+  updateStats();
 }
 
-// Функция для генерации случайного события
+// Функция исследования локации
 function exploreLocation() {
   const events = currentLocation.events;
   const randomEvent = events[Math.floor(Math.random() * events.length)];
   logEvent(randomEvent);
 
-  // Если найдено зелье здоровья
   if (randomEvent.includes("нашли зелье")) {
     addItemToInventory("Зелье здоровья");
   }
-
-  // Дополнительная логика для других локаций
   if (randomEvent === "Вы нашли старый меч!") {
     player.strength += 5;
     logEvent("Ваша сила увеличилась на 5!");
     updateStats();
   }
-
   if (
     randomEvent === "Из кустов выскочил волк!" ||
-    randomEvent === "На вас напал Скелет!" ||
+    randomEvent === "На вас напал скелет!" ||
     randomEvent === "Вас атакует тень прошлого!"
   ) {
-    // Сброс и инициализация enemy в зависимости от события
-    enemy = { ...baseEnemy }; // Сбрасываем к базовым значениям
+    // Инициализация врага по событию
+    enemyUsedSoulDrain = false; // сбрасываем флаг
+    enemy = { ...baseEnemy };
 
     if (randomEvent.includes("волк")) {
-      enemy.name = "Волк";
+      enemy.name = "волк";
       enemy.health = 40;
       enemy.strength = 12;
       enemy.defense = 2;
       enemy.specialAbility = null;
-    } else if (randomEvent.includes("Скелет")) {
-      enemy.name = "Скелет";
+    } else if (randomEvent.includes("скелет")) {
+      enemy.name = "скелет";
       enemy.health = 30;
       enemy.strength = 8;
       enemy.defense = 1;
       enemy.specialAbility = null;
     } else {
-      enemy.name = "Тень_прошлого";
+      enemy.name = "тень_прошлого";
       enemy.health = 50;
       enemy.strength = 8;
       enemy.defense = 3;
       enemy.specialAbility = "Поглощение души";
     }
-
     startBattle();
   }
-
   if (randomEvent === "Вы нашли сундук с золотом!") {
     logEvent("Вы получили 50 золотых монет!");
-    player.gold = (player.gold || 0) + 50; // Добавляем золото игроку
+    player.gold += 50;
   }
 }
 
-// Функция для расчета урона
+// Расчёт урона
 function calculateDamage(attacker, defender) {
-  const damage = Math.max(attacker.strength - defender.defense, 1); // Минимальный урон = 1
-  return damage;
+  return Math.max(attacker.strength - defender.defense, 1);
 }
 
-// Функция для выполнения удара
+// Функция атаки
 function performAttack(attacker, defender, isPlayerAttacking) {
   let damage = calculateDamage(attacker, defender);
 
-  // Если атакует враг и у него есть специальная способность
   if (!isPlayerAttacking && attacker.specialAbility) {
-    const chance = Math.random(); // Генерируем случайное число от 0 до 1
-    if (chance < 0.3) {
-      // 30% шанс активации способности
+    const chance = Math.random();
+    if (!enemyUsedSoulDrain && chance < 0.3) {
       logEvent(`${attacker.name} использует "${attacker.specialAbility}"!`);
-      if (attacker.specialAbility === "Поглощение души") {
-        player.strength = Math.max(player.strength - 2, 1); // Временно снижаем силу игрока
-        logEvent("Ваша сила временно снижена!");
-        updateStats();
-      }
+      player.strength = Math.max(player.strength - 2, 1);
+      enemyUsedSoulDrain = true;
+      logEvent("Ваша сила временно снижена!");
+      updateStats();
     }
   }
 
@@ -174,93 +172,88 @@ function performAttack(attacker, defender, isPlayerAttacking) {
 
   if (isPlayerAttacking) {
     logEvent(`Вы атаковали ${defender.name} и нанесли ${damage} урона.`);
-    // Анимация для аватарки врага
-    const enemyAvatar = document.querySelector('#enemy-avatar img[alt="Враг"]');
+    const enemyAvatar = document.querySelector(
+      `#enemy-avatar img[src="images/${enemy.name}.png"]`
+    );
     if (enemyAvatar && enemyAvatar.style.display !== "none") {
-      enemyAvatar.style.animation = "hit 0.5s";
-      setTimeout(() => (enemyAvatar.style.animation = ""), 500);
+      enemyAvatar.classList.add("hit-animation");
+      setTimeout(() => enemyAvatar.classList.remove("hit-animation"), 500);
     }
   } else {
     logEvent(`${attacker.name} атаковал вас и нанес ${damage} урона.`);
-    // Анимация для аватарки игрока
     const playerAvatar = document.querySelector("#player-avatar img");
     if (playerAvatar) {
-      playerAvatar.style.animation = "hit 0.5s";
-      setTimeout(() => (playerAvatar.style.animation = ""), 500);
+      playerAvatar.classList.add("hit-animation");
+      setTimeout(() => playerAvatar.classList.remove("hit-animation"), 500);
     }
   }
-
-  updateStats(); // Обновляем характеристики игрока
+  updateStats();
 }
 
-// Функция для завершения боя
+// Завершение боя
 function endBattle(isPlayerVictory) {
+  // Восстанавливаем силу игрока
+  player.strength = player.originalStrength;
+  updateStats();
+
   if (isPlayerVictory) {
     logEvent(`Вы победили ${enemy.name}!`);
-    gainXP(10); // Получаем опыт за победу
+    gainXP(10);
   } else {
     logEvent("Вы погибли...");
   }
 
-  // Скрываем аватарки врага
-  const enemyAvatars = document.querySelectorAll("#enemy-avatar img");
-  enemyAvatars.forEach((avatar) => {
+  // Скрываем аватарки врагов
+  document.querySelectorAll("#enemy-avatar img").forEach((avatar) => {
     avatar.style.display = "none";
   });
 
-  // Отключаем кнопку "Атаковать" после завершения боя
-  const attackButton = document.getElementById("attack");
-  if (attackButton) {
-    attackButton.onclick = null;
+  enemy = { ...baseEnemy }; // сброс врага
+}
+
+// Функция, вызываемая при нажатии кнопки «Атаковать»
+// Если бой активен (враг существует и имеет здоровье > 0), происходит обмен ударами
+// Иначе выводится сообщение о том, что враг не найден.
+function attackHandler() {
+  if (enemy && enemy.health > 0) {
+    performAttack(player, enemy, true);
+    if (enemy.health <= 0) {
+      endBattle(true);
+      return;
+    }
+    performAttack(enemy, player, false);
+    if (player.health <= 0) {
+      endBattle(false);
+    }
+  } else {
+    logEvent("Сейчас нет врага для атаки.");
   }
 }
 
-// Функция для начала боя
+// Начало боя
 function startBattle() {
   logEvent(`Вы встретили ${enemy.name}!`);
-
-  // Скрываем все аватарки врагов сначала
-  const enemyAvatars = document.querySelectorAll("#enemy-avatar img");
-  enemyAvatars.forEach((avatar) => {
+  document.querySelectorAll("#enemy-avatar img").forEach((avatar) => {
     avatar.style.display = "none";
   });
 
-  // Показываем нужную аватарку врага
   const enemyAvatar = document.querySelector(
-    `#enemy-avatar img[src="images/${enemy.name.toLowerCase()}.png"]`
+    `#enemy-avatar img[src="images/${enemy.name}.png"]`
   );
   if (enemyAvatar) {
     enemyAvatar.style.display = "block";
   } else {
-    // Если не найдена конкретная аватарка, используем первую
     const firstAvatar = document.querySelector("#enemy-avatar img");
     if (firstAvatar) {
+      firstAvatar.src = `images/${enemy.name}.png`;
       firstAvatar.style.display = "block";
-      firstAvatar.src = `images/${enemy.name.toLowerCase()}.png`;
     }
   }
 
-  // Привязка кнопки "Атаковать" к бою
-  const attackButton = document.getElementById("attack");
-  if (attackButton) {
-    attackButton.onclick = () => {
-      performAttack(player, enemy, true);
-
-      if (enemy.health <= 0) {
-        endBattle(true); // Завершаем бой с победой игрока
-        return;
-      }
-
-      performAttack(enemy, player, false);
-
-      if (player.health <= 0) {
-        endBattle(false); // Завершаем бой с поражением игрока
-      }
-    };
-  }
+  player.originalStrength = player.strength;
 }
 
-// Обновленная функция добавления предмета в инвентарь
+// Добавление предмета в инвентарь
 function addItemToInventory(itemName) {
   const inventoryList = document.getElementById("inventory-list");
   if (!inventoryList) return;
@@ -268,7 +261,6 @@ function addItemToInventory(itemName) {
   const listItem = document.createElement("li");
   listItem.textContent = itemName;
 
-  // Добавляем кнопку "Использовать" для каждого предмета
   const useButton = document.createElement("button");
   useButton.textContent = "Использовать";
   useButton.onclick = () => useItem(itemName, listItem);
@@ -278,19 +270,17 @@ function addItemToInventory(itemName) {
   logEvent(`Добавлено в инвентарь: ${itemName}`);
 }
 
-// Функция для использования предмета
+// Использование предмета
 function useItem(itemName, listItem) {
   if (itemName === "Зелье здоровья") {
-    player.health = Math.min(player.health + 20, 100); // Восстанавливаем здоровье (не более максимума)
+    player.health = Math.min(player.health + 20, 100);
     logEvent("Вы использовали зелье здоровья. Здоровье восстановлено.");
   }
-
-  // Удаляем предмет из интерфейса и инвентаря
   listItem.remove();
   updateStats();
 }
 
-// Обновленный объект с локациями и NPC
+// Локации и NPC
 const locations = {
   city: {
     name: "Заброшенный город",
@@ -341,18 +331,18 @@ const locations = {
       "Из кустов выскочил волк!",
       "Вы нашли древний алтарь.",
     ],
-    npc: null, // В этой локации нет NPC
+    npc: null,
   },
   dungeon: {
     name: "Подземелье",
     description: "Темные коридоры, полные ловушек и сокровищ.",
     events: [
       "Вы нашли сундук с золотом!",
-      "На вас напал Скелет!",
+      "На вас напал скелет!",
       "Вы услышали странный шепот...",
     ],
     npc: {
-      name: "Хранитель подземелий",
+      name: "Хранитель-подземелий",
       dialogues: [
         {
           text: "Только достойные могут пройти дальше.",
@@ -361,7 +351,7 @@ const locations = {
               text: "Я готов доказать свою силу!",
               effect: () => {
                 logEvent("Хранитель: 'Докажи это в бою!'");
-                startBattle(); // Запускаем бой
+                startBattle();
               },
             },
             {
@@ -377,56 +367,52 @@ const locations = {
   },
 };
 
-// Функция для очистки динамических кнопок
+// Функция очистки динамических кнопок
 function clearDynamicButtons() {
   const dynamicButtonsContainer = document.getElementById("dynamic-buttons");
   if (dynamicButtonsContainer) {
-    dynamicButtonsContainer.innerHTML = ""; // Удаляем все динамические кнопки
+    dynamicButtonsContainer.innerHTML = "";
   }
 }
 
-// Функция для восстановления стандартных кнопок
+// Восстановление стандартных кнопок (включая постоянную кнопку "Атаковать")
 function restoreDynamicButtons() {
-  clearDynamicButtons(); // Удаляем старые кнопки
-
+  clearDynamicButtons();
   const dynamicButtonsContainer = document.getElementById("dynamic-buttons");
   if (!dynamicButtonsContainer) return;
 
-  // Создаем кнопки только если их еще нет в контейнере
-  if (dynamicButtonsContainer.children.length === 0) {
-    // Создаем кнопку "Исследовать"
-    const exploreButton = document.createElement("button");
-    exploreButton.id = "explore";
-    exploreButton.textContent = "Исследовать";
-    exploreButton.addEventListener("click", exploreLocation);
-    dynamicButtonsContainer.appendChild(exploreButton);
+  // Постоянная кнопка "Атаковать"
+  const attackButton = document.createElement("button");
+  attackButton.id = "attack";
+  attackButton.textContent = "Атаковать";
+  attackButton.addEventListener("click", attackHandler);
+  dynamicButtonsContainer.appendChild(attackButton);
 
-    // Создаем кнопку "Атаковать"
-    const attackButton = document.createElement("button");
-    attackButton.id = "attack";
-    attackButton.textContent = "Атаковать";
-    dynamicButtonsContainer.appendChild(attackButton);
+  // Кнопка "Исследовать"
+  const exploreButton = document.createElement("button");
+  exploreButton.id = "explore";
+  exploreButton.textContent = "Исследовать";
+  exploreButton.addEventListener("click", exploreLocation);
+  dynamicButtonsContainer.appendChild(exploreButton);
 
-    // Создаем кнопку "Поговорить"
-    const talkButton = document.createElement("button");
-    talkButton.id = "talk";
-    talkButton.textContent = "Поговорить";
-    talkButton.addEventListener("click", startDialogue);
-    dynamicButtonsContainer.appendChild(talkButton);
-  }
+  // Кнопка "Поговорить"
+  const talkButton = document.createElement("button");
+  talkButton.id = "talk";
+  talkButton.textContent = "Поговорить";
+  talkButton.addEventListener("click", startDialogue);
+  dynamicButtonsContainer.appendChild(talkButton);
 }
 
 // Текущая локация
 let currentLocation = locations.city;
 
-// Функция для начала диалога
+// Начало диалога с NPC
 function startDialogue() {
   if (!currentLocation.npc) {
     logEvent("Здесь никого нет, с кем можно поговорить.");
     return;
   }
 
-  // Функция для показа аватара NPC
   function showNpcAvatar(npc) {
     const npcAvatar = document.querySelector("#npc-avatar-img");
     if (npcAvatar) {
@@ -435,7 +421,6 @@ function startDialogue() {
     }
   }
 
-  // Функция для скрытия аватара NPC
   function hideNpcAvatar() {
     const npcAvatar = document.querySelector("#npc-avatar-img");
     if (npcAvatar) {
@@ -443,42 +428,33 @@ function startDialogue() {
     }
   }
 
-  // Показываем аватар NPC
   showNpcAvatar(currentLocation.npc);
-
   const dialogue = currentLocation.npc.dialogues[0];
   logEvent(`${currentLocation.npc.name}: "${dialogue.text}"`);
 
-  // Очищаем динамические кнопки
   clearDynamicButtons();
-
   const dynamicButtonsContainer = document.getElementById("dynamic-buttons");
   if (!dynamicButtonsContainer) return;
 
-  // Создаем кнопки для каждого варианта ответа
-  dialogue.options.forEach((option, index) => {
+  dialogue.options.forEach((option) => {
     const button = document.createElement("button");
     button.textContent = option.text;
     button.onclick = () => {
       option.effect();
       logEvent(`Ваш выбор: ${option.text}`);
-      hideNpcAvatar(); // Скрываем аватар NPC после выбора
-      restoreDynamicButtons(); // Восстанавливаем стандартные кнопки
+      hideNpcAvatar();
+      restoreDynamicButtons();
     };
     dynamicButtonsContainer.appendChild(button);
   });
 }
 
-// Функция для обновления отображения локации
+// Обновление отображения локации
 function updateLocation() {
-  // Очищаем секцию с локациями
   let localsSection = document.querySelector("#locals");
   if (localsSection) {
-    // Проверяем, существует ли уже секция с локацией
     let locationSection = document.querySelector("#location-section");
-
     if (!locationSection) {
-      // Создаем секцию с локацией и кнопками
       locationSection = document.createElement("section");
       locationSection.id = "location-section";
       locationSection.innerHTML = `
@@ -488,7 +464,6 @@ function updateLocation() {
       `;
       localsSection.appendChild(locationSection);
 
-      // Создаем кнопки для перехода между локациями
       Object.keys(locations).forEach((key) => {
         const location = locations[key];
         const button = document.createElement("button");
@@ -507,13 +482,10 @@ function updateLocation() {
         locationSection.appendChild(button);
       });
     } else {
-      // Обновляем текст текущей локации
       document.getElementById("current-location").textContent =
         currentLocation.name;
       document.getElementById("location-description").textContent =
         currentLocation.description;
-
-      // Обновляем состояние кнопок
       Object.keys(locations).forEach((key) => {
         const location = locations[key];
         const button = document.getElementById(`move-to-${key}`);
@@ -529,40 +501,34 @@ function updateLocation() {
   }
 }
 
-// Функция для получения опыта
+// Получение опыта и повышение уровня
 function gainXP(amount) {
   player.xp += amount;
   logEvent(`Вы получили ${amount} опыта.`);
-
   if (player.xp >= player.levelUpThreshold) {
     player.level++;
     player.xp = 0;
-    player.levelUpThreshold += 10; // Увеличиваем порог для следующего уровня
+    player.levelUpThreshold += 10;
     logEvent(`Вы достигли уровня ${player.level}!`);
-
-    // Повышаем характеристики
     player.health += 20;
     player.strength += 5;
     player.defense += 3;
     logEvent("Ваши характеристики увеличились!");
-
     updateStats();
-
-    // Проверка на окончание игры
     if (player.level >= 5) {
       endGame();
     }
   }
 }
 
-// Функция для сохранения игры
+// Сохранение игры
 function saveGame() {
   try {
     const gameState = {
-      player: { ...player }, // Копируем данные игрока
+      player: { ...player },
       currentLocation: currentLocation.name,
       activeQuests: [...activeQuests],
-      quests: { ...quests }, // Сохраняем состояние квестов
+      quests: { ...quests },
     };
     localStorage.setItem("savedGame", JSON.stringify(gameState));
     logEvent("Игра сохранена.");
@@ -572,7 +538,7 @@ function saveGame() {
   }
 }
 
-// Функция для загрузки игры
+// Загрузка игры
 function loadGame() {
   try {
     const savedGame = localStorage.getItem("savedGame");
@@ -580,16 +546,9 @@ function loadGame() {
       logEvent("Нет сохраненных данных.");
       return;
     }
-
     const gameState = JSON.parse(savedGame);
-
-    // Восстановление данных игрока
     Object.assign(player, gameState.player);
-
-    // Восстановление активных квестов
     activeQuests = gameState.activeQuests || [];
-
-    // Восстановление состояния квестов
     if (gameState.quests) {
       Object.keys(gameState.quests).forEach((questId) => {
         if (quests[questId]) {
@@ -597,15 +556,12 @@ function loadGame() {
         }
       });
     }
-
-    // Находим текущую локацию по имени
     for (const key in locations) {
       if (locations[key].name === gameState.currentLocation) {
         currentLocation = locations[key];
         break;
       }
     }
-
     updateStats();
     updateLocation();
     logEvent("Игра загружена.");
@@ -615,9 +571,8 @@ function loadGame() {
   }
 }
 
-// Функция для сброса игры
+// Сброс игры
 function resetGame() {
-  // Сброс характеристик игрока
   player.health = 100;
   player.strength = 10;
   player.defense = 5;
@@ -626,41 +581,22 @@ function resetGame() {
   player.levelUpThreshold = 20;
   player.gold = 0;
   player.alignment = undefined;
-
-  // Сброс состояния квестов
   Object.keys(quests).forEach((questId) => {
     quests[questId].completed = false;
   });
-
-  // Очистка активных квестов
   activeQuests = [];
-
-  // Возврат в начальную локацию
   currentLocation = locations.city;
-
-  // Очистка инвентаря
   const inventoryList = document.getElementById("inventory-list");
   if (inventoryList) {
     inventoryList.innerHTML = "";
   }
-
-  // Обновление интерфейса
   updateStats();
   updateLocation();
-
-  // Восстановление стандартных кнопок
   restoreDynamicButtons();
-
-  // Запись в журнал
   logEvent("Игра сброшена. Добро пожаловать в Эвермор!");
 }
 
-// Привязка кнопок сохранения, загрузки и сброса
-document.getElementById("save").addEventListener("click", saveGame);
-document.getElementById("load").addEventListener("click", loadGame);
-document.getElementById("reset").addEventListener("click", resetGame);
-
-// Функция для завершения игры
+// Завершение игры
 function endGame() {
   if (player.alignment === "hero") {
     logEvent("Вы победили тьму и вернули свет в мир. Героическая концовка!");
@@ -668,22 +604,25 @@ function endGame() {
     logEvent("Вы выжили, но мир остался во тьме. Нейтральная концовка.");
   } else if (player.alignment === "villain") {
     logEvent(
-      "Вы подчинили тьму себе, но стали ее рабом. Антагонистическая концовка."
+      "Вы подчинили тьму себе, но стали её рабом. Антагонистическая концовка."
     );
   } else {
     logEvent(
       "Ваше путешествие завершилось. Но какой след вы оставили в истории Эвермора?"
     );
   }
-
   logEvent("Спасибо за игру!");
-
-  // Отключаем все кнопки
-  const buttons = document.querySelectorAll("button");
-  buttons.forEach((button) => {
+  document.querySelectorAll("button").forEach((button) => {
     if (button.id !== "reset") {
-      // Оставляем доступной только кнопку сброса
       button.disabled = true;
     }
   });
 }
+
+// Привязка событий для сохранения, загрузки и сброса игры
+document.getElementById("save").addEventListener("click", saveGame);
+document.getElementById("load").addEventListener("click", loadGame);
+document.getElementById("reset").addEventListener("click", resetGame);
+
+// Изначально восстанавливаем стандартные кнопки
+restoreDynamicButtons();

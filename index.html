@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Эвермор: Погружение во Тьму</title>
     <link rel="stylesheet" href="styles.css">
+
 </head>
 
 <body>
@@ -26,6 +27,7 @@
                     <p>Сила: <span id="strength">10</span></p>
                     <p>Защита: <span id="defense">5</span></p>
                     <p>Уровень: <span id="level">1</span></p>
+                    <p>Опыт: <span id="xp">0</span></p>
                 </div>
                 <div id="inventory">
                     <h2>Инвентарь</h2>
@@ -38,25 +40,18 @@
                 </div>
                 <div id="enemy-avatar">
                     <img src="images/волк.png" alt="Враг" class="avatar" style="display: none;">
-                    <img src="images/Тень_прошлого.png" alt="Враг" class="avatar" style="display: none;">
-                    <img src="images/Скелет.png" alt="Враг" class="avatar" style="display: none;">
+                    <img src="images/тень_прошлого.png" alt="Враг" class="avatar" style="display: none;">
+                    <img src="images/скелет.png" alt="Враг" class="avatar" style="display: none;">
                 </div>
                 <div id="npc-avatar">
-                    <img src="" alt="NPC" id="npc-avatar-img" style="display: none;">
+                    <img src="images/ava_старец-маг.png" alt="NPC" id="npc-avatar-img" class="avatar" style="display: none;">
+                    <img src="images/ava_Хранитель-подземелий.png" alt="NPC" id="npc-avatar-img" class="avatar" style="display: none;">
                 </div>
-                <div id="dialogue-text"></div>
             </section>
-
             <section id="controls">
                 <div id="dynamic-buttons"></div>
-
             </section>
-            
-
-            <section id="locals">
-                
-            </section>
-
+            <section id="locals"></section>
             <section id="game-log">
                 <h2>Журнал событий</h2>
                 <textarea id="log" readonly></textarea>
