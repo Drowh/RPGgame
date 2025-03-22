@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Эвермор: Погружение во Тьму</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="game-container">
+        <section>
+            <button id="save">Сохранить</button>
+            <button id="load">Загрузить</button>
+            <button id="reset">Начать заново</button>
+        </section>
+        <header>
+            <h1>Эвермор: Погружение во Тьму</h1>
+        </header>
+        <main>
+            <section id="character-stats">
+                <h2>Характеристики</h2>
+                <p>Здоровье: <span id="health">100</span></p>
+                <p>Сила: <span id="strength">10</span></p>
+                <p>Защита: <span id="defense">5</span></p>
+                <p>Уровень: <span id="level">1</span></p>
+            </section>
+            <section id="inventory">
+                <h2>Инвентарь</h2>
+                <ul id="inventory-list"></ul>
+            </section>
+            <section id="avatars">
+                <div id="player-avatar">
+                    <img src="images/ava_player.png" alt="Игрок" class="avatar">
+                </div>
+                <div id="enemy-avatar">
+                    <img src="images/enemy.png" alt="Враг" class="avatar" style="display: none;">
+                </div>
+            </section>
+
+            <section id="controls">
+                <div id="dynamic-buttons"></div>
+                <button id="explore">Исследовать</button>
+                <button id="attack">Атаковать</button>
+                <button id="talk">Поговорить</button>
+            </section>
+
+            <section id="location-section">
+                
+            </section>
+            
+            <section id="game-log">
+                <h2>Журнал событий</h2>
+                <textarea id="log" readonly></textarea>
+            </section>
+
+
+        </main>
+    </div>
+    <script src="game.js"></script>
+</body>
+
+</html>
