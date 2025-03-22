@@ -1,4 +1,8 @@
 const logElement = document.getElementById("log");
+document.addEventListener('DOMContentLoaded', function() {
+  updateLocation();
+  restoreDynamicButtons();
+});
 
 function logEvent(message) {
   if (!logElement) return; // Защита от ошибок
@@ -112,7 +116,6 @@ function performAttack(attacker, defender, isPlayerAttacking) {
 }
 
 // Функция для завершения боя
-f// Функция для завершения боя
 function endBattle(isPlayerVictory) {
   if (isPlayerVictory) {
     logEvent(`Вы победили ${enemy.name}!`);
@@ -324,22 +327,26 @@ function startDialogue() {
 // Привязка кнопки "Поговорить"
 document.getElementById('talk').addEventListener('click', startDialogue);
 
+
 // Текущая локация
 let currentLocation = locations.city;
 
 // Функция для обновления отображения локации
 function updateLocation() {
-  const locationDisplay = document.getElementById('current-location');
-  if (!locationDisplay) {
-    const locationSection = document.createElement('section');
+  let locationSection = document.querySelector('#location-section');
+  if (!locationSection) {
+    // Создаем секцию с локацией и кнопками
+    locationSection = document.createElement('section');
+    locationSection.id = 'location-section';
     locationSection.innerHTML = `
       <h2>Текущая локация</h2>
       <p id="current-location">${currentLocation.name}</p>
       <button id="move-to-forest">Перейти в Темный лес</button>
       <button id="move-to-city">Вернуться в Заброшенный город</button>
     `;
-    document.querySelector('main').appendChild(locationSection);
+    document.querySelector("#locals").appendChild(locationSection);
 
+    // Привязываем события к кнопкам
     document.getElementById('move-to-forest').addEventListener('click', () => {
       currentLocation = locations.forest;
       logEvent(`Вы перешли в ${currentLocation.name}.`);
@@ -352,12 +359,14 @@ function updateLocation() {
       updateLocation();
     });
   } else {
-    locationDisplay.textContent = currentLocation.name;
+    // Обновляем текст текущей локации
+    document.getElementById('current-location').textContent = currentLocation.name;
   }
 }
 
 // Инициализация локации при загрузке игры
 updateLocation();
+
 
 // Обновление функции исследования
 function exploreLocation() {
@@ -434,36 +443,36 @@ function startBattle() {
   };
 }
 
-// Создаем объект для звуков
-const sounds = {
-  attack: new Audio('sounds/attack.mp3'),
-  heal: new Audio('sounds/heal.mp3'),
-  backgroundMusic: new Audio('sounds/background-music.mp3'),
-};
+// // Создаем объект для звуков
+// const sounds = {
+//   attack: new Audio('sounds/attack.mp3'),
+//   heal: new Audio('sounds/heal.mp3'),
+//   backgroundMusic: new Audio('sounds/background-music.mp3'),
+// };
 
-// Функция для воспроизведения звука
-function playSound(sound) {
-  sound.currentTime = 0; // Начинаем с начала
-  sound.play();
-}
+// // Функция для воспроизведения звука
+// function playSound(sound) {
+//   sound.currentTime = 0; // Начинаем с начала
+//   sound.play();
+// }
 
-// Добавляем звуки в механики
-document.getElementById('attack').addEventListener('click', () => {
-  playSound(sounds.attack);
-});
+// // Добавляем звуки в механики
+// document.getElementById('attack').addEventListener('click', () => {
+//   playSound(sounds.attack);
+// });
 
-function useItem(itemName) {
-  if (itemName === "Зелье здоровья") {
-    playSound(sounds.heal);
-    player.health = Math.min(player.health + 20, 100);
-    logEvent("Вы использовали зелье здоровья. Здоровье восстановлено.");
-  }
-}
+// function useItem(itemName) {
+//   if (itemName === "Зелье здоровья") {
+//     playSound(sounds.heal);
+//     player.health = Math.min(player.health + 20, 100);
+//     logEvent("Вы использовали зелье здоровья. Здоровье восстановлено.");
+//   }
+// }
 
-// Включаем фоновую музыку
-sounds.backgroundMusic.loop = true;
-sounds.backgroundMusic.volume = 0.3; // Уменьшаем громкость
-sounds.backgroundMusic.play();
+// // Включаем фоновую музыку
+// sounds.backgroundMusic.loop = true;
+// sounds.backgroundMusic.volume = 0.3; // Уменьшаем громкость
+// sounds.backgroundMusic.play();
 
 
 // Функция для сохранения игры

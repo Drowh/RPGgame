@@ -73,3 +73,32 @@ main {
 #game-log {
   margin-top: auto; /* Перемещает журнал событий вниз */
 }
+
+#character-and-inventory {
+  display: flex; /* Используем flexbox для размещения элементов */
+  justify-content: space-between; /* Размещаем элементы по краям */
+  align-items: flex-start; /* Выравниваем по верхнему краю */
+  margin-bottom: 20px; /* Отступ снизу */
+}
+
+#character-stats,
+#inventory {
+  width: 48%; /* Каждая секция занимает примерно половину ширины */
+}
+
+#character-stats {
+  text-align: left; /* Текст выравнивается по левому краю */
+}
+
+#inventory {
+  text-align: right; /* Текст выравнивается по правому краю */
+}
+
+#inventory-list {
+  list-style-type: none; /* Убираем маркеры списка */
+  padding: 0; /* Убираем отступы */
+}
+
+#inventory-list li {
+  margin-bottom: 5px; /* Отступ между элементами инвентаря */
+}
