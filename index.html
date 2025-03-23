@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Эридан: Последний Страж</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="village-bg">
+    <div class="game-container">
+        <!-- Название и кнопка рестарта -->
+        <header>
+            <h1>Эридан: Последний Страж</h1>
+            <button id="reset">Рестарт</button>
+        </header>
+
+        <!-- Полоса уровня -->
+        <section id="level-bar">
+            <div class="progress-bar">
+                <div id="xp-bar" style="width: 0%;"></div>
+                <div class="progress-text">
+                    Уровень: <span id="level">1</span> | Опыт: <span id="xp">0</span>/100
+                </div>
+            </div>
+        </section>
+
+        <!-- Контейнер для характеристик и аватарок -->
+        <section class="character-section">
+            <div id="player-avatar">
+                <div class="health-bar">
+                    <div id="player-hp-bar" style="width: 100%;"></div>
+                    <div class="health-text">Здоровье: <span id="hp">100</span>/<span id="max-hp">100</span></div>
+                </div>
+                <img src="image/player.png" alt="Герой">
+                
+            </div>
+
+            <div id="stats">
+                <p>HP: <span id="hp">100</span>/<span id="max-hp">100</span></p>
+                <p>MP: <span id="mp">50</span>/<span id="max-mp">50</span></p>
+                <p>STR: <span id="str">10</span></p>
+                <p>DEF: <span id="def">5</span></p>
+                <p>AGI: <span id="agi">8</span></p>
+            </div>
+
+            <div id="enemy-avatar">
+                <div class="health-bar">
+                    <div id="enemy-hp-bar" style="width: 0%;"></div>
+                    <div class="health-text">Здоровье: <span id="enemy-hp">50</span>/<span id="enemy-max-hp">50</span></div>
+                </div>
+                <img src="enemy.png" alt="Враг">
+            </div>
+        </section>
+
+        <!-- Инвентарь -->
+        <section id="inventory">
+            <div id="items">
+                <div class="item" data-type="health">Зелье здоровья: <span id="health-potion">1</span></div>
+                <div class="item" data-type="strength">Зелье силы: <span id="strength-potion">1</span></div>
+                <div class="item" data-type="defense">Зелье защиты: <span id="defense-potion">1</span></div>
+                <div class="item" data-type="agility">Зелье ловкости: <span id="agility-potion">1</span></div>
+                <div class="item" data-type="mana">Зелье маны: <span id="mana-potion">1</span></div>
+            </div>
+        </section>
+
+        <!-- Кнопки управления -->
+        <section id="actions">
+            <button id="attack">Атаковать</button>
+            <button id="defend">Защищаться</button>
+            <button id="useItem">Исп. предмет</button>
+        </section>
+
+        <!-- Локация и переходы -->
+        <section id="location">
+            <p id="desc">Вы в Деревне, безопасной зоне.</p>
+            <div id="location-actions">
+                <button id="move-village" disabled>Вернуться в Деревню</button>
+                <button id="move-forest">Идти в Мрачный Лес</button>
+                <button id="move-ruins">Идти в Руины</button>
+            </div>
+        </section>
+
+        <!-- Журнал действий -->
+        <section id="log">
+            <div id="events"></div>
+        </section>
+    </div>
+    <script src="game.js" defer></script>
+</body>
+
+</html>
