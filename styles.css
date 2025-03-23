@@ -220,7 +220,7 @@ header h1 {
 }
 
 #items .item.highlighted {
-    background-color: #FF5555;
+    background-color:rgb(16, 132, 171);
     color: #FFFFFF;
 }
 

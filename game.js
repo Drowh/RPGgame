@@ -79,8 +79,49 @@ let currentNPC = null;
 let currentLocation = "village";
 let isPlayerTurn = true; // Флаг хода игрока
 
+// Функции для сохранения и загрузки прогресса
+const saveProgress = () => {
+    const progress = {
+        player: {
+            hp: player.hp,
+            maxHp: player.maxHp,
+            mp: player.mp,
+            maxMp: player.maxMp,
+            str: player.str,
+            def: player.def,
+            agi: player.agi,
+            level: player.level,
+            xp: player.xp
+        },
+        inventory: inventory
+    };
+    localStorage.setItem('gameProgress', JSON.stringify(progress));
+};
+
+const loadProgress = () => {
+    const savedProgress = localStorage.getItem('gameProgress');
+    if (savedProgress) {
+        const progress = JSON.parse(savedProgress);
+        player.hp = progress.player.hp;
+        player.maxHp = progress.player.maxHp;
+        player.mp = progress.player.mp;
+        player.maxMp = progress.player.maxMp;
+        player.str = progress.player.str;
+        player.def = progress.player.def;
+        player.agi = progress.player.agi;
+        player.level = progress.player.level;
+        player.xp = progress.player.xp;
+        inventory.health = progress.inventory.health;
+        inventory.strength = progress.inventory.strength;
+        inventory.defense = progress.inventory.defense;
+        inventory.agility = progress.inventory.agility;
+        inventory.mana = progress.inventory.mana;
+    }
+};
+
 // Инициализация игры
 document.addEventListener("DOMContentLoaded", () => {
+    loadProgress();
   const desc = document.getElementById("desc");
   const actions = document.getElementById("actions");
   const enemyAvatar = document.getElementById("enemy-avatar");
@@ -94,6 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const xpBar = document.getElementById("xp-bar");
   const xpText = document.getElementById("xp");
   const levelText = document.getElementById("level");
+  
 
   // Функция для смены аватарки с плавным переходом
   const changeAvatar = (newSrc, newAlt) => {
@@ -148,18 +190,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Функция для обновления интерфейса
   const updateUI = () => {
-    playerHpText.textContent = player.hp;
+    // Обновление полоски здоровья игрока
+    playerHpText.textContent = Math.floor(player.hp);
     playerMaxHpText.textContent = player.maxHp;
     playerHpBar.style.width = `${(player.hp / player.maxHp) * 100}%`;
+
+    // Обновление характеристик в stats
+    document.getElementById("hp").textContent = Math.floor(player.hp);
+    document.getElementById("max-hp").textContent = player.maxHp;
+    document.getElementById("mp").textContent = Math.floor(player.mp);
+    document.getElementById("max-mp").textContent = player.maxMp;
+    document.getElementById("str").textContent = player.str;
+    document.getElementById("def").textContent = player.def;
+    document.getElementById("agi").textContent = player.agi;
+
+    // Обновление здоровья врага
     if (currentEnemy) {
-      enemyHpText.textContent = currentEnemy.hp;
+      enemyHpText.textContent = Math.floor(currentEnemy.hp);
       enemyMaxHpText.textContent = currentEnemy.maxHp;
       enemyHpBar.style.width = `${
         (currentEnemy.hp / currentEnemy.maxHp) * 100
       }%`;
     }
+
+    // Обновление полосы опыта
+    const requiredXp = xpPerLevel[player.level - 1] || 300;
     xpText.textContent = player.xp;
-    xpBar.style.width = `${player.xp % 100}%`;
+    document.getElementById("required-xp").textContent = requiredXp; // Обновляем требуемый опыт
+    xpBar.style.width = `${(player.xp / requiredXp) * 100}%`;
     levelText.textContent = player.level;
   };
 
@@ -216,6 +274,7 @@ document.addEventListener("DOMContentLoaded", () => {
       enemyAvatar.style.display = "none";
       actions.style.display = "none";
       updateUI();
+      saveProgress();
       return true;
     }
     return false;
@@ -342,7 +401,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("move-ruins").disabled = true;
 
     // Показываем врага
-    currentEnemy = characters.enemies.forest;
+    currentEnemy = JSON.parse(JSON.stringify(characters.enemies.forest)); // Создаем копию врага с полным здоровьем
     currentNPC = null;
     changeAvatar(currentEnemy.avatar, currentEnemy.name);
     enemyAvatar.style.display = "block";
@@ -356,6 +415,7 @@ document.addEventListener("DOMContentLoaded", () => {
     changeBackground(currentLocation);
     isPlayerTurn = true;
     addLog("Ваш ход!");
+    saveProgress();
   });
 
   document.getElementById("move-village").addEventListener("click", () => {
@@ -381,6 +441,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector("#enemy-avatar .health-text").style.display = "none";
     actions.style.display = "none";
     changeBackground(currentLocation);
+    saveProgress();
   });
 
   document.getElementById("move-ruins").addEventListener("click", () => {
@@ -392,7 +453,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("move-ruins").disabled = true;
 
     // Показываем врага (Скелет)
-    currentEnemy = characters.enemies.ruins;
+    currentEnemy = JSON.parse(JSON.stringify(characters.enemies.ruins)); // Создаем копию врага с полным здоровьем
     currentNPC = null;
     changeAvatar(currentEnemy.avatar, currentEnemy.name);
     enemyAvatar.style.display = "block";
@@ -406,6 +467,7 @@ document.addEventListener("DOMContentLoaded", () => {
     changeBackground(currentLocation);
     isPlayerTurn = true;
     addLog("Ваш ход!");
+    saveProgress();
   });
 
   // Обработчики боевых действий
@@ -470,5 +532,10 @@ function addLog(message) {
   const p = document.createElement("p");
   p.textContent = message;
   events.appendChild(p);
-  events.scrollTop = events.scrollHeight; // Автоскролл вниз
+  // Прокручиваем вниз с помощью scrollIntoView
+  p.scrollIntoView({ behavior: "smooth", block: "end" });
+  // Дополнительно устанавливаем scrollTop
+  setTimeout(() => {
+    events.scrollTop = events.scrollHeight;
+  }, 0);
 }

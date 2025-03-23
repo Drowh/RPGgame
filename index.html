@@ -13,7 +13,8 @@
         <!-- Название и кнопка рестарта -->
         <header>
             <h1>Эридан: Последний Страж</h1>
-            <button id="reset">Рестарт</button>
+        <button id="reset"
+            onclick="return confirm('Вы уверены, что хотите сбросить прогресс? Все несохраненные данные будут потеряны!')">Рестарт</button>
         </header>
 
         <!-- Полоса уровня -->
@@ -21,7 +22,7 @@
             <div class="progress-bar">
                 <div id="xp-bar" style="width: 0%;"></div>
                 <div class="progress-text">
-                    Уровень: <span id="level">1</span> | Опыт: <span id="xp">0</span>/100
+                    Уровень: <span id="level">1</span> | Опыт: <span id="xp">0</span>/<span id="required-xp">100</span>
                 </div>
             </div>
         </section>
