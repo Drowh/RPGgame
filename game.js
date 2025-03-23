@@ -71,6 +71,9 @@ let potionEffects = {
     agility: { turns: 0, value: 0 }
 };
 
+// Требуемый опыт для каждого уровня
+const xpPerLevel = [100, 150, 200, 250, 300]; // Увеличивается с каждым уровнем
+
 let currentEnemy = null;
 let currentNPC = null;
 let currentLocation = "village";
@@ -111,7 +114,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const calculateDamage = (attacker, defender) => {
     let damage = Math.max(
       0,
-      attacker.str - (defender.isDefending ? defender.def * 2 : defender.def)
+      attacker.str -
+        (defender.isDefending ? Math.floor(defender.def * 1.5) : defender.def)
     );
     const dodgeChance = (defender.agi - attacker.agi) * 2;
     if (Math.random() * 100 < dodgeChance) {
@@ -126,12 +130,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }.`
       );
     }
-    // Анимация пошатывания
     if (damage > 0) {
       if (attacker === player) {
-        document.querySelector("#enemy-avatar img").classList.add("shake");
+        const enemyImg = document.querySelector("#enemy-avatar img");
+        enemyImg.classList.remove("shake");
+        void enemyImg.offsetWidth;
+        enemyImg.classList.add("shake");
       } else {
-        document.querySelector("#player-avatar img").classList.add("shake");
+        const playerImg = document.querySelector("#player-avatar img");
+        playerImg.classList.remove("shake");
+        void playerImg.offsetWidth;
+        playerImg.classList.add("shake");
       }
     }
     return damage;
@@ -171,12 +180,21 @@ document.addEventListener("DOMContentLoaded", () => {
         `Вы победили ${currentEnemy.name}! Получено ${currentEnemy.xpReward} опыта.`
       );
       player.xp += currentEnemy.xpReward;
-      if (player.xp >= 100) {
+      const requiredXp = xpPerLevel[player.level - 1] || 300; // Если уровень выше 5, требуется 300 XP
+      if (player.xp >= requiredXp) {
         player.level++;
-        player.xp -= 100;
-        addLog(`Вы достигли уровня ${player.level}!`);
+        player.xp -= requiredXp;
+        player.maxHp += 20;
+        player.hp = player.maxHp;
+        player.maxMp += 10;
+        player.mp = player.maxMp;
+        player.str += 5;
+        player.def += 3;
+        player.agi += 3;
+        addLog(
+          `Вы достигли уровня ${player.level}! Характеристики улучшены: HP +20, MP +10, STR +5, DEF +3, AGI +3.`
+        );
       }
-      // Награда: случайное зелье
       const potions = ["health", "strength", "defense", "agility", "mana"];
       const randomPotion = potions[Math.floor(Math.random() * potions.length)];
       inventory[randomPotion]++;
@@ -348,6 +366,12 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("move-village").disabled = true;
     document.getElementById("move-ruins").disabled = false;
 
+    // Восстановление здоровья и маны
+    player.hp = player.maxHp;
+    player.mp = player.maxMp;
+    addLog("Ваши здоровье и мана полностью восстановлены!");
+    updateUI();
+
     // Показываем NPC
     currentEnemy = null;
     currentNPC = characters.npcs.village;
@@ -402,7 +426,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!isPlayerTurn || !currentEnemy) return;
     isPlayerTurn = false;
     player.isDefending = true;
-    addLog("Вы заняли оборонительную стойку!");
+    addLog(
+      "Защита увеличена на 50% на 1 ход."
+    );
     updatePotionEffects();
     enemyTurn();
   });
@@ -444,5 +470,5 @@ function addLog(message) {
   const p = document.createElement("p");
   p.textContent = message;
   events.appendChild(p);
-  events.scrollTop = events.scrollHeight;
+  events.scrollTop = events.scrollHeight; // Автоскролл вниз
 }
