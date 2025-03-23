@@ -152,6 +152,7 @@ header h1 {
     opacity: 0;
 }
 
+
 .health-bar {
     position: relative;
     background-color: #555;
@@ -269,10 +270,15 @@ header h1 {
     border: 2px solid #FFD700;
     width: 80%;
     max-width: 400px;
-    height: 150px;
-    overflow-y: scroll;
     text-align: left;
 }
+
+#events {
+    max-height: 200px; /* Укажи нужную высоту */
+    overflow-y: auto; /* Включаем вертикальную прокрутку */
+    scroll-behavior: smooth; /* Плавная прокрутка */
+}
+
 
 /* Адаптивность для мобильных устройств */
 @media (max-width: 400px) {

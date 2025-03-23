@@ -1,16 +1,30 @@
 // Глобальные данные
-let player = {
-  hp: 100,
-  maxHp: 100,
-  mp: 50,
-  maxMp: 50,
-  str: 10,
-  def: 5,
-  agi: 8,
-  level: 1,
-  xp: 0,
-  isDefending: false, // Флаг защиты
+
+// Начальное состояние игрока
+const initialPlayerState = {
+    hp: 100,
+    maxHp: 100,
+    mp: 50,
+    maxMp: 50,
+    str: 10,
+    def: 5,
+    agi: 8,
+    level: 1,
+    xp: 0,
+    isDefending: false,
 };
+
+// Начальное состояние инвентаря
+const initialInventoryState = {
+    health: 1,
+    strength: 1,
+    defense: 1,
+    agility: 1,
+    mana: 1
+};
+
+let player = { ...initialPlayerState };
+let inventory = { ...initialInventoryState };
 
 // Данные врагов и NPC
 const characters = {
@@ -55,20 +69,12 @@ const locations = {
   ruins: { bgClass: "ruins-bg" },
 };
 
-// Инвентарь
-let inventory = {
-    health: 1,    // Зелье здоровья (+50 HP)
-    strength: 1,  // Зелье силы (+20 STR на 2 хода)
-    defense: 1,   // Зелье защиты (+20 DEF на 2 хода)
-    agility: 1,   // Зелье ловкости (+20 AGI на 2 хода)
-    mana: 1       // Зелье маны (+35 MP)
-};
 
 // Эффекты зелий
 let potionEffects = {
-    strength: { turns: 0, value: 0 },
-    defense: { turns: 0, value: 0 },
-    agility: { turns: 0, value: 0 }
+  strength: { turns: 0, value: 0 },
+  defense: { turns: 0, value: 0 },
+  agility: { turns: 0, value: 0 },
 };
 
 // Требуемый опыт для каждого уровня
@@ -79,49 +85,52 @@ let currentNPC = null;
 let currentLocation = "village";
 let isPlayerTurn = true; // Флаг хода игрока
 
+
+
 // Функции для сохранения и загрузки прогресса
 const saveProgress = () => {
-    const progress = {
-        player: {
-            hp: player.hp,
-            maxHp: player.maxHp,
-            mp: player.mp,
-            maxMp: player.maxMp,
-            str: player.str,
-            def: player.def,
-            agi: player.agi,
-            level: player.level,
-            xp: player.xp
-        },
-        inventory: inventory
-    };
-    localStorage.setItem('gameProgress', JSON.stringify(progress));
+  const progress = {
+    player: {
+      hp: player.hp,
+      maxHp: player.maxHp,
+      mp: player.mp,
+      maxMp: player.maxMp,
+      str: player.str,
+      def: player.def,
+      agi: player.agi,
+      level: player.level,
+      xp: player.xp,
+    },
+    inventory: inventory,
+  };
+  localStorage.setItem("gameProgress", JSON.stringify(progress));
 };
 
 const loadProgress = () => {
-    const savedProgress = localStorage.getItem('gameProgress');
-    if (savedProgress) {
-        const progress = JSON.parse(savedProgress);
-        player.hp = progress.player.hp;
-        player.maxHp = progress.player.maxHp;
-        player.mp = progress.player.mp;
-        player.maxMp = progress.player.maxMp;
-        player.str = progress.player.str;
-        player.def = progress.player.def;
-        player.agi = progress.player.agi;
-        player.level = progress.player.level;
-        player.xp = progress.player.xp;
-        inventory.health = progress.inventory.health;
-        inventory.strength = progress.inventory.strength;
-        inventory.defense = progress.inventory.defense;
-        inventory.agility = progress.inventory.agility;
-        inventory.mana = progress.inventory.mana;
-    }
+  const savedProgress = localStorage.getItem("gameProgress");
+  if (savedProgress) {
+    const progress = JSON.parse(savedProgress);
+    player.hp = progress.player.hp;
+    player.maxHp = progress.player.maxHp;
+    player.mp = progress.player.mp;
+    player.maxMp = progress.player.maxMp;
+    player.str = progress.player.str;
+    player.def = progress.player.def;
+    player.agi = progress.player.agi;
+    player.level = progress.player.level;
+    player.xp = progress.player.xp;
+    inventory.health = progress.inventory.health;
+    inventory.strength = progress.inventory.strength;
+    inventory.defense = progress.inventory.defense;
+    inventory.agility = progress.inventory.agility;
+    inventory.mana = progress.inventory.mana;
+  }
 };
 
 // Инициализация игры
 document.addEventListener("DOMContentLoaded", () => {
-    loadProgress();
+  loadProgress();
+  console.log("Инициализация началась, прогресс загружен:", player, inventory);
   const desc = document.getElementById("desc");
   const actions = document.getElementById("actions");
   const enemyAvatar = document.getElementById("enemy-avatar");
@@ -135,7 +144,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const xpBar = document.getElementById("xp-bar");
   const xpText = document.getElementById("xp");
   const levelText = document.getElementById("level");
-  
 
   // Функция для смены аватарки с плавным переходом
   const changeAvatar = (newSrc, newAlt) => {
@@ -190,19 +198,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Функция для обновления интерфейса
   const updateUI = () => {
-    // Обновление полоски здоровья игрока
+    // Проверка на наличие элементов
+    if (!playerHpText || !playerHpBar || !xpText || !xpBar || !levelText) {
+      console.error("Ошибка: Не все элементы интерфейса найдены для updateUI");
+      return;
+    }
+
+    // Обновление полоски здоровья игрока (вверху интерфейса)
     playerHpText.textContent = Math.floor(player.hp);
     playerMaxHpText.textContent = player.maxHp;
     playerHpBar.style.width = `${(player.hp / player.maxHp) * 100}%`;
 
-    // Обновление характеристик в stats
-    document.getElementById("hp").textContent = Math.floor(player.hp);
-    document.getElementById("max-hp").textContent = player.maxHp;
-    document.getElementById("mp").textContent = Math.floor(player.mp);
-    document.getElementById("max-mp").textContent = player.maxMp;
-    document.getElementById("str").textContent = player.str;
-    document.getElementById("def").textContent = player.def;
-    document.getElementById("agi").textContent = player.agi;
+    // Обновление характеристик в stats (в <div id="stats">)
+    document.querySelector("#stats #hp").textContent = Math.floor(player.hp);
+    document.querySelector("#stats #max-hp").textContent = player.maxHp;
+    document.querySelector("#stats #mp").textContent = Math.floor(player.mp);
+    document.querySelector("#stats #max-mp").textContent = player.maxMp;
+    document.querySelector("#stats #str").textContent = player.str;
+    document.querySelector("#stats #def").textContent = player.def;
+    document.querySelector("#stats #agi").textContent = player.agi;
 
     // Обновление здоровья врага
     if (currentEnemy) {
@@ -216,7 +230,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Обновление полосы опыта
     const requiredXp = xpPerLevel[player.level - 1] || 300;
     xpText.textContent = player.xp;
-    document.getElementById("required-xp").textContent = requiredXp; // Обновляем требуемый опыт
+    document.getElementById("required-xp").textContent = requiredXp;
     xpBar.style.width = `${(player.xp / requiredXp) * 100}%`;
     levelText.textContent = player.level;
   };
@@ -386,6 +400,7 @@ document.addEventListener("DOMContentLoaded", () => {
       player.mp = Math.min(player.maxMp, player.mp + 35);
       addLog("Вы использовали Зелье маны и восстановили 35 MP.");
     }
+    console.log("Обновление UI перед начальным запуском");
     updateInventory();
     updateUI();
     return true;
@@ -416,6 +431,7 @@ document.addEventListener("DOMContentLoaded", () => {
     isPlayerTurn = true;
     addLog("Ваш ход!");
     saveProgress();
+    updateUI();
   });
 
   document.getElementById("move-village").addEventListener("click", () => {
@@ -468,6 +484,7 @@ document.addEventListener("DOMContentLoaded", () => {
     isPlayerTurn = true;
     addLog("Ваш ход!");
     saveProgress();
+    updateUI();
   });
 
   // Обработчики боевых действий
@@ -488,9 +505,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!isPlayerTurn || !currentEnemy) return;
     isPlayerTurn = false;
     player.isDefending = true;
-    addLog(
-      "Защита увеличена на 50% на 1 ход."
-    );
+    addLog("Защита увеличена на 50% на 1 ход.");
     updatePotionEffects();
     enemyTurn();
   });
@@ -516,14 +531,58 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // Функция сброса игры
+  const resetGame = () => {
+    // Сбрасываем игрока и инвентарь
+    player = { ...initialPlayerState };
+    inventory = { ...initialInventoryState };
+    currentEnemy = null;
+    currentNPC = characters.npcs.village;
+    currentLocation = "village";
+    isPlayerTurn = true;
+
+    // Очищаем localStorage
+    localStorage.removeItem("gameProgress");
+
+    // Сбрасываем интерфейс
+    desc.textContent = "Вы в Деревне, безопасной зоне.";
+    enemyAvatar.style.display = "none";
+    actions.style.display = "none";
+    changeAvatar(currentNPC.avatar, currentNPC.name);
+    enemyAvatar.style.display = "block";
+    enemyHpBar.style.display = "none";
+    document.querySelector("#enemy-avatar .health-text").style.display = "none";
+    changeBackground(currentLocation);
+    document.getElementById("move-forest").disabled = false;
+    document.getElementById("move-village").disabled = true;
+    document.getElementById("move-ruins").disabled = false;
+
+    // Очищаем журнал событий
+    const events = document.getElementById("events");
+    events.innerHTML = "";
+    addLog(
+      `Вы начали игру заново. Вы в Деревне, безопасной зоне Эридана. Вас встречает ${currentNPC.name}.`
+    );
+
+    // Обновляем интерфейс
+    updateInventory();
+    updateUI();
+  };
+
   // Рестарт
   document.getElementById("reset").addEventListener("click", () => {
-    location.reload();
+    if (
+      confirm(
+        "Вы уверены, что хотите сбросить прогресс? Все данные будут потеряны!"
+      )
+    ) {
+      resetGame();
+    }
   });
 
   // Начальное обновление интерфейса
-  updateUI();
   updateInventory();
+  updateUI();
 });
 
 // Функция добавления записи в журнал
@@ -532,10 +591,8 @@ function addLog(message) {
   const p = document.createElement("p");
   p.textContent = message;
   events.appendChild(p);
-  // Прокручиваем вниз с помощью scrollIntoView
-  p.scrollIntoView({ behavior: "smooth", block: "end" });
-  // Дополнительно устанавливаем scrollTop
+  // Принудительно прокручиваем вниз
   setTimeout(() => {
     events.scrollTop = events.scrollHeight;
-  }, 0);
+  }, 10); // Задержка 10 мс для гарантированного обновления DOM
 }
