@@ -40,6 +40,12 @@ body.ruins-bg {
     background-image: url('image/ruins-bg.png'); /* Путь к фону руин */
 }
 
+body.sfchik-cave-bg {
+    background-image: url('image/sfcfik-cave.png'); /* Укажи правильный путь к изображению */
+    background-size: cover;
+    background-position: center;
+}
+
 .game-container {
     display: flex;
     flex-direction: column;

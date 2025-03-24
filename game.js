@@ -51,6 +51,17 @@ const characters = {
             xpReward: 30,
         },
     },
+    sfchik: {
+            name: "СФчик",
+            hp: 150,
+            maxHp: 150,
+            str: 20,
+            def: 10,
+            agi: 8,
+            avatar: "image/sfcfik.png", // Укажи путь к изображению
+            xpReward: 100,
+            
+        },
     npcs: {
         village: {
             name: "Элара",
@@ -116,6 +127,7 @@ const locations = {
   village: { bgClass: "village-bg" },
   forest: { bgClass: "forest-bg" },
   ruins: { bgClass: "ruins-bg" },
+  "sfchik-cave": { bgClass: "sfchik-cave-bg" },
 };
 
 
@@ -542,13 +554,29 @@ const loadProgress = () => {
         const damage = calculateDamage(currentEnemy, player);
         player.hp = Math.max(0, player.hp - damage);
         updateUI();
+
+        // Применяем способности врага, если они есть
+        if (currentEnemy.abilities) {
+          currentEnemy.abilities.forEach((ability) => {
+            if (Math.random() < ability.chance) {
+              ability.effect(player);
+            }
+          });
+        }
+
         if (!checkBattleEnd()) {
+          updatePotionEffects(); // Учитываем эффекты зелий
           addLog("Ваш ход!");
           isPlayerTurn = true;
+          // Явно "разблокируем" кнопки, если они были деактивированы
+          document.getElementById("attack").disabled = false;
+          document.getElementById("defend").disabled = false;
+          document.getElementById("useItem").disabled = false;
         }
       }
     }, 500);
   };
+
 
   
 
@@ -803,6 +831,7 @@ const loadProgress = () => {
     document.getElementById("move-forest").disabled = false;
     document.getElementById("move-village").disabled = true;
     document.getElementById("move-ruins").disabled = false;
+    document.getElementById("move-sfcfik-cave").disabled = false; // Добавь эту строку
 
     // Восстановление здоровья и маны
     player.hp = player.maxHp;
@@ -818,8 +847,8 @@ const loadProgress = () => {
     enemyHpBar.style.display = "none";
     document.querySelector("#enemy-avatar .health-text").style.display = "none";
     actions.style.display = "none";
-    inventoryDiv.style.display = "none"; // Скрываем инвентарь
-    talkButton.style.display = "block"; // Показываем кнопку "Поговорить"
+    inventoryDiv.style.display = "none";
+    talkButton.style.display = "block";
     changeBackground(currentLocation);
     saveProgress();
   });
@@ -834,6 +863,40 @@ const loadProgress = () => {
 
     // Показываем врага (Скелет)
     currentEnemy = JSON.parse(JSON.stringify(characters.enemies.ruins));
+    currentNPC = null;
+    changeAvatar(currentEnemy.avatar, currentEnemy.name);
+    enemyAvatar.style.display = "block";
+    enemyHpBar.style.display = "block";
+    document.querySelector("#enemy-avatar .health-text").style.display =
+      "block";
+    enemyHpBar.style.width = "100%";
+    enemyHpText.textContent = currentEnemy.hp;
+    enemyMaxHpText.textContent = currentEnemy.maxHp;
+    actions.style.display = "flex";
+    inventoryDiv.style.display = "block"; // Показываем инвентарь
+    talkButton.style.display = "none"; // Скрываем кнопку "Поговорить"
+    changeBackground(currentLocation);
+    isPlayerTurn = true;
+    addLog("Ваш ход!");
+    saveProgress();
+    updateUI();
+  });
+
+  document.getElementById("move-sfcfik-cave").addEventListener("click", () => {
+    if (player.level < 3) {
+      addLog("Вам нужен 3-й уровень, чтобы войти в Пещеру СФчика!");
+      return;
+    }
+    currentLocation = "sfchik-cave";
+    desc.textContent = "Вы в Пещере СФчика.";
+    addLog("Вы покинули Деревню и вошли в Пещеру СФчика.");
+    document.getElementById("move-forest").disabled = true;
+    document.getElementById("move-village").disabled = false;
+    document.getElementById("move-ruins").disabled = true;
+    document.getElementById("move-sfcfik-cave").disabled = true;
+
+    // Показываем босса
+    currentEnemy = JSON.parse(JSON.stringify(characters.sfchik));
     currentNPC = null;
     changeAvatar(currentEnemy.avatar, currentEnemy.name);
     enemyAvatar.style.display = "block";
