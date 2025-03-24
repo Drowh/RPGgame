@@ -44,6 +44,8 @@
                 <p>DEF: <span id="def">5</span></p>
                 <p>AGI: <span id="agi">8</span></p>
             </div>
+            
+
 
             <div id="enemy-avatar">
                 <div class="health-bar">
@@ -54,6 +56,14 @@
                 <img src="enemy.png" alt="Враг">
             </div>
         </section>
+
+       
+        <!-- Секция активных квестов -->
+        <div id="quests">
+            <h2>Активные квесты</h2>
+            <div id="active-quests"></div>
+            <button id="talk-button" style="display: none;">Поговорить</button>
+        </div>
 
         <!-- Инвентарь -->
         <section id="inventory">
@@ -87,6 +97,13 @@
         <section id="log">
             <div id="events"></div>
         </section>
+    </div>
+    <!-- Модальное окно для диалогов -->
+    <div id="dialogue-modal" class="modal hidden">
+        <div class="modal-content">
+            <p id="dialogue-text"></p>
+            <div id="dialogue-options"></div>
+        </div>
     </div>
     <script src="game.js" defer></script>
 </body>

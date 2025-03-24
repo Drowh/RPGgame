@@ -27,39 +27,88 @@ let player = { ...initialPlayerState };
 let inventory = { ...initialInventoryState };
 
 // Данные врагов и NPC
+// Данные врагов и NPC
 const characters = {
-  enemies: {
-    forest: {
-      name: "Гоблин",
-      hp: 50,
-      maxHp: 50,
-      str: 8,
-      def: 3,
-      agi: 6,
-      avatar: "image/goblin.png",
-      xpReward: 20, // Награда за победу
+    enemies: {
+        forest: {
+            name: "Гоблин",
+            hp: 50,
+            maxHp: 50,
+            str: 8,
+            def: 3,
+            agi: 6,
+            avatar: "image/goblin.png",
+            xpReward: 20,
+        },
+        ruins: {
+            name: "Скелет",
+            hp: 70,
+            maxHp: 70,
+            str: 12,
+            def: 5,
+            agi: 4,
+            avatar: "image/skeleton.png",
+            xpReward: 30,
+        },
     },
-    ruins: {
-      name: "Скелет",
-      hp: 70,
-      maxHp: 70,
-      str: 12,
-      def: 5,
-      agi: 4,
-      avatar: "image/skeleton.png",
-      xpReward: 30,
+    npcs: {
+        village: {
+            name: "Элара",
+            avatar: "image/elara.png",
+            dialogues: [
+                {
+                    text: "Привет, путник! Я Элара. В нашем лесу неспокойно, гоблины нападают на жителей. Не могли бы ты помочь?",
+                    options: [
+                        { text: "Конечно, я помогу!", next: "quest-offer" },
+                        { text: "Извини, мне некогда.", next: "decline" }
+                    ]
+                },
+                {
+                    id: "quest-offer",
+                    text: "Спасибо! Убей 3 гоблинов в Мрачном Лесу, и я дам тебе награду.",
+                    options: [
+                        { text: "Принимаю задание!", next: null, action: "accept-quest" },
+                        { text: "Подумаю ещё...", next: null }
+                    ]
+                },
+                {
+                    id: "decline",
+                    text: "Понимаю, у всех свои дела. Если передумаешь, дай знать!",
+                    options: [
+                        { text: "Хорошо, я подумаю.", next: null }
+                    ]
+                }
+            ]
+        },
+        villageBlacksmith: {
+            name: "Грок",
+            avatar: "image/grok.png",
+            dialogues: [
+                {
+                    text: "Я Грок, кузнец этой деревни. Могу предложить тебе усилить оружие, но мне нужны материалы из Древних Руин. Принесёшь?",
+                    options: [
+                        { text: "Да, я принесу материалы!", next: "quest-offer-blacksmith" },
+                        { text: "Не сейчас, Грок.", next: "decline-blacksmith" }
+                    ]
+                },
+                {
+                    id: "quest-offer-blacksmith",
+                    text: "Отлично! Убей 2 скелетов в Древних Руинах и принеси их кости. Я сделаю тебе меч получше.",
+                    options: [
+                        { text: "Принимаю задание!", next: null, action: "accept-quest-blacksmith" },
+                        { text: "Подумаю ещё...", next: null }
+                    ]
+                },
+                {
+                    id: "decline-blacksmith",
+                    text: "Хорошо, приходи, когда будешь готов.",
+                    options: [
+                        { text: "Хорошо, я подумаю.", next: null }
+                    ]
+                }
+            ]
+        },
     },
-  },
-  npcs: {
-    village: {
-      name: "Элара",
-      avatar: "image/elara.png",
-    },
-    villageBlacksmith: {
-      name: "Грок",
-      avatar: "grok.png",
-    },
-  },
 };
 
 // Данные локаций и их фоны
@@ -84,8 +133,47 @@ let currentEnemy = null;
 let currentNPC = null;
 let currentLocation = "village";
 let isPlayerTurn = true; // Флаг хода игрока
+let activeQuestsDiv = null; // Глобальная переменная для activeQuestsDiv
 
+// Данные квестов
+const quests = {
+    "goblin-slay": {
+        name: "Убить гоблинов",
+        description: "Элара попросила убить 3 гоблинов в Мрачном Лесу.",
+        target: "Гоблин",
+        required: 3,
+        current: 0,
+        reward: { xp: 50, inventory: { health: 2 } },
+        completed: false,
+        active: false
+    },
+    "skeleton-bones": {
+        name: "Собрать кости скелетов",
+        description: "Грок попросил убить 2 скелетов в Древних Руинах и принести кости.",
+        target: "Скелет",
+        required: 2,
+        current: 0,
+        reward: { xp: 70, inventory: { strength: 2 }, stat: { str: 5 } },
+        completed: false,
+        active: false
+    }
+};
 
+  // Функция для обновления интерфейса квестов
+  const updateQuestsUI = () => {
+    activeQuestsDiv.innerHTML = "";
+    Object.keys(quests).forEach((questId) => {
+      const quest = quests[questId];
+      if (quest.active) {
+        // Показываем все активные квесты, даже завершённые
+        const p = document.createElement("p");
+        p.textContent = `${quest.name}: ${quest.description} (${
+          quest.current
+        }/${quest.required})${quest.completed ? " (Завершён)" : ""}`;
+        activeQuestsDiv.appendChild(p);
+      }
+    });
+  };
 
 // Функции для сохранения и загрузки прогресса
 const saveProgress = () => {
@@ -102,6 +190,7 @@ const saveProgress = () => {
       xp: player.xp,
     },
     inventory: inventory,
+    quests: quests,
   };
   localStorage.setItem("gameProgress", JSON.stringify(progress));
 };
@@ -124,26 +213,173 @@ const loadProgress = () => {
     inventory.defense = progress.inventory.defense;
     inventory.agility = progress.inventory.agility;
     inventory.mana = progress.inventory.mana;
+    // Загрузка квестов
+    if (progress.quests) {
+      Object.keys(progress.quests).forEach((questId) => {
+        if (quests[questId]) {
+          quests[questId].active = progress.quests[questId].active;
+          quests[questId].completed = progress.quests[questId].completed;
+          quests[questId].current = progress.quests[questId].current;
+        }
+      });
+    }
   }
 };
 
 // Инициализация игры
-document.addEventListener("DOMContentLoaded", () => {
-  loadProgress();
-  console.log("Инициализация началась, прогресс загружен:", player, inventory);
-  const desc = document.getElementById("desc");
-  const actions = document.getElementById("actions");
-  const enemyAvatar = document.getElementById("enemy-avatar");
-  const enemyImg = enemyAvatar.querySelector("img");
-  const enemyHpBar = document.getElementById("enemy-hp-bar");
-  const enemyHpText = document.getElementById("enemy-hp");
-  const enemyMaxHpText = document.getElementById("enemy-max-hp");
-  const playerHpBar = document.getElementById("player-hp-bar");
-  const playerHpText = document.getElementById("hp");
-  const playerMaxHpText = document.getElementById("max-hp");
-  const xpBar = document.getElementById("xp-bar");
-  const xpText = document.getElementById("xp");
-  const levelText = document.getElementById("level");
+
+  document.addEventListener("DOMContentLoaded", () => {
+    // Определяем элементы интерфейса
+    const desc = document.getElementById("desc");
+    const actions = document.getElementById("actions");
+    const enemyAvatar = document.getElementById("enemy-avatar");
+    const enemyImg = enemyAvatar.querySelector("img");
+    const enemyHpBar = document.getElementById("enemy-hp-bar");
+    const enemyHpText = document.getElementById("enemy-hp");
+    const enemyMaxHpText = document.getElementById("enemy-max-hp");
+    const playerHpBar = document.getElementById("player-hp-bar");
+    const playerHpText = document.getElementById("hp");
+    const playerMaxHpText = document.getElementById("max-hp");
+    const xpBar = document.getElementById("xp-bar");
+    const xpText = document.getElementById("xp");
+    const levelText = document.getElementById("level");
+
+    // Элементы модального окна
+    const dialogueModal = document.getElementById("dialogue-modal");
+    const dialogueText = document.getElementById("dialogue-text");
+    const dialogueOptions = document.getElementById("dialogue-options");
+
+    // Элементы квестов и инвентаря
+    activeQuestsDiv = document.getElementById("active-quests"); // Перемещаем сюда
+    const inventoryDiv = document.getElementById("inventory");
+    const talkButton = document.getElementById("talk-button");
+
+    // Добавляем обработчик для кнопки "Поговорить"
+    talkButton.addEventListener("click", () => {
+      console.log("Кнопка 'Поговорить' нажата, currentNPC:", currentNPC);
+      if (currentNPC) {
+        showDialogue(currentNPC);
+      } else {
+        console.error("NPC не найден!");
+      }
+    });
+
+    loadProgress(); // Теперь loadProgress вызывается после инициализации всех элементов
+    console.log("Инициализация началась, прогресс загружен:", player, inventory);
+
+  // Функция для отображения диалога
+  const showDialogue = (npc, dialogueIndex = 0) => {
+    console.log(
+      "showDialogue вызвана для NPC:",
+      npc.name,
+      "с индексом:",
+      dialogueIndex
+    );
+
+    // Проверяем, есть ли выполненные квесты для этого NPC
+    let questCompletedDialogueIndex = -1;
+    if (npc.name === "Элара" && quests["goblin-slay"].completed) {
+      console.log("Квест 'goblin-slay' завершён, ищем диалог с наградой");
+      questCompletedDialogueIndex = npc.dialogues.findIndex(
+        (d) => d.id === "quest-complete"
+      );
+      if (questCompletedDialogueIndex === -1) {
+        npc.dialogues.push({
+          id: "quest-complete",
+          text: "Ты убил 3 гоблинов? Отлично! Вот твоя награда.",
+          options: [
+            {
+              text: "Спасибо!",
+              next: null,
+              action: "claim-reward-goblin-slay",
+            },
+          ],
+        });
+        questCompletedDialogueIndex = npc.dialogues.length - 1;
+      }
+    } else if (npc.name === "Грок" && quests["skeleton-bones"].completed) {
+      console.log("Квест 'skeleton-bones' завершён, ищем диалог с наградой");
+      questCompletedDialogueIndex = npc.dialogues.findIndex(
+        (d) => d.id === "quest-complete-blacksmith"
+      );
+      if (questCompletedDialogueIndex === -1) {
+        npc.dialogues.push({
+          id: "quest-complete-blacksmith",
+          text: "Ты принёс кости скелетов? Отлично! Вот твой новый меч и немного опыта.",
+          options: [
+            {
+              text: "Спасибо, Грок!",
+              next: null,
+              action: "claim-reward-skeleton-bones",
+            },
+          ],
+        });
+        questCompletedDialogueIndex = npc.dialogues.length - 1;
+      }
+    }
+
+    // Если есть диалог с наградой, используем его
+    if (questCompletedDialogueIndex !== -1) {
+      dialogueIndex = questCompletedDialogueIndex;
+    } else {
+      // Если квест не активен и мы начинаем диалог с нуля, показываем начальный диалог
+      if (dialogueIndex === 0) {
+        if (npc.name === "Элара" && !quests["goblin-slay"].active) {
+          dialogueIndex = 0;
+        } else if (npc.name === "Грок" && !quests["skeleton-bones"].active) {
+          dialogueIndex = 0;
+        }
+      }
+    }
+
+    const dialogue = npc.dialogues[dialogueIndex];
+    if (!dialogue) {
+      console.error("Диалог не найден для индекса:", dialogueIndex);
+      return;
+    }
+
+    // Обновляем текст диалога
+    dialogueText.textContent = dialogue.text;
+
+    // Очищаем старые кнопки
+    dialogueOptions.innerHTML = "";
+
+    // Создаём новые кнопки
+    dialogue.options.forEach((option, index) => {
+      const button = document.createElement("button");
+      button.textContent = option.text;
+      button.addEventListener("click", () => {
+        console.log("Нажата кнопка диалога:", option.text);
+        if (option.next) {
+          const nextIndex = npc.dialogues.findIndex(
+            (d) => d.id === option.next
+          );
+          showDialogue(npc, nextIndex);
+        } else {
+          dialogueModal.classList.add("hidden");
+          if (option.action) {
+            if (option.action === "accept-quest") {
+              acceptQuest("goblin-slay");
+            } else if (option.action === "accept-quest-blacksmith") {
+              acceptQuest("skeleton-bones");
+            } else if (option.action === "claim-reward-goblin-slay") {
+              claimQuestReward("goblin-slay");
+            } else if (option.action === "claim-reward-skeleton-bones") {
+              claimQuestReward("skeleton-bones");
+            }
+          }
+        }
+      });
+      console.log("Создана кнопка для опции:", option.text);
+      dialogueOptions.appendChild(button);
+    });
+
+    // Лог для проверки, сколько кнопок было создано
+    console.log("Всего создано кнопок:", dialogueOptions.children.length);
+
+    // Показываем модальное окно
+    dialogueModal.classList.remove("hidden");
+  };
 
   // Функция для смены аватарки с плавным переходом
   const changeAvatar = (newSrc, newAlt) => {
@@ -245,6 +481,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("move-forest").disabled = true;
       document.getElementById("move-village").disabled = true;
       document.getElementById("move-ruins").disabled = true;
+      inventoryDiv.style.display = "none"; // Скрываем инвентарь
       return true;
     }
     if (currentEnemy && currentEnemy.hp <= 0) {
@@ -252,7 +489,7 @@ document.addEventListener("DOMContentLoaded", () => {
         `Вы победили ${currentEnemy.name}! Получено ${currentEnemy.xpReward} опыта.`
       );
       player.xp += currentEnemy.xpReward;
-      const requiredXp = xpPerLevel[player.level - 1] || 300; // Если уровень выше 5, требуется 300 XP
+      const requiredXp = xpPerLevel[player.level - 1] || 300;
       if (player.xp >= requiredXp) {
         player.level++;
         player.xp -= requiredXp;
@@ -283,10 +520,13 @@ document.addEventListener("DOMContentLoaded", () => {
             : "Зелье маны"
         }!`
       );
+      // Обновляем прогресс квестов
+      updateQuestProgress(currentEnemy.name);
       updateInventory();
       currentEnemy = null;
       enemyAvatar.style.display = "none";
       actions.style.display = "none";
+      inventoryDiv.style.display = "none"; // Скрываем инвентарь после боя
       updateUI();
       saveProgress();
       return true;
@@ -310,6 +550,124 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 500);
   };
 
+  
+
+  // Функция для принятия квеста
+  const acceptQuest = (questId) => {
+    quests[questId].active = true;
+    addLog(`Вы приняли квест: ${quests[questId].name}`);
+    updateQuestsUI();
+    saveProgress();
+  };
+
+  // Функция для обновления прогресса квеста
+  const updateQuestProgress = (enemyName) => {
+    Object.keys(quests).forEach((questId) => {
+      const quest = quests[questId];
+      if (quest.active && !quest.completed && quest.target === enemyName) {
+        quest.current++;
+        addLog(
+          `Прогресс квеста "${quest.name}": ${quest.current}/${quest.required}`
+        );
+        if (quest.current >= quest.required) {
+          quest.completed = true;
+          addLog(
+            `Квест "${quest.name}" выполнен! Вернитесь к NPC за наградой.`
+          );
+        }
+        updateQuestsUI();
+        saveProgress();
+      }
+    });
+  };
+
+  
+
+  // Функция для выдачи награды
+  const claimQuestReward = (questId) => {
+    const quest = quests[questId];
+    player.xp += quest.reward.xp;
+    addLog(`Вы получили ${quest.reward.xp} опыта за выполнение квеста!`);
+
+    // Проверка повышения уровня
+    const requiredXp = xpPerLevel[player.level - 1] || 300;
+    if (player.xp >= requiredXp) {
+      player.level++;
+      player.xp -= requiredXp;
+      player.maxHp += 20;
+      player.hp = player.maxHp;
+      player.maxMp += 10;
+      player.mp = player.maxMp;
+      player.str += 5;
+      player.def += 3;
+      player.agi += 3;
+      addLog(
+        `Вы достигли уровня ${player.level}! Характеристики улучшены: HP +20, MP +10, STR +5, DEF +3, AGI +3.`
+      );
+    }
+
+    // Выдача предметов
+    if (quest.reward.inventory) {
+      Object.keys(quest.reward.inventory).forEach((item) => {
+        inventory[item] += quest.reward.inventory[item];
+        addLog(
+          `Вы получили ${quest.reward.inventory[item]} ${
+            item === "health"
+              ? "Зелье здоровья"
+              : item === "strength"
+              ? "Зелье силы"
+              : item === "defense"
+              ? "Зелье защиты"
+              : item === "agility"
+              ? "Зелье ловкости"
+              : "Зелье маны"
+          }!`
+        );
+      });
+    }
+
+    // Улучшение характеристик
+    if (quest.reward.stat) {
+      Object.keys(quest.reward.stat).forEach((stat) => {
+        player[stat] += quest.reward.stat[stat];
+        addLog(
+          `Ваша характеристика ${stat.toUpperCase()} увеличена на ${
+            quest.reward.stat[stat]
+          }!`
+        );
+      });
+    }
+
+    // Сбрасываем квест
+    quest.active = false;
+    quest.completed = false;
+    quest.current = 0;
+
+    // Удаляем диалог с наградой из npc.dialogues
+    if (questId === "goblin-slay") {
+      const npc = characters.npcs.village;
+      const dialogueIndex = npc.dialogues.findIndex(
+        (d) => d.id === "quest-complete"
+      );
+      if (dialogueIndex !== -1) {
+        npc.dialogues.splice(dialogueIndex, 1);
+      }
+    } else if (questId === "skeleton-bones") {
+      const npc = characters.npcs.villageBlacksmith;
+      const dialogueIndex = npc.dialogues.findIndex(
+        (d) => d.id === "quest-complete-blacksmith"
+      );
+      if (dialogueIndex !== -1) {
+        npc.dialogues.splice(dialogueIndex, 1);
+      }
+    }
+
+    updateQuestsUI();
+    updateInventory();
+    updateUI();
+    saveProgress();
+  };
+
   // Начальная настройка: показываем NPC в деревне
   enemyAvatar.style.display = "none";
   actions.style.display = "none";
@@ -318,6 +676,8 @@ document.addEventListener("DOMContentLoaded", () => {
   enemyAvatar.style.display = "block";
   enemyHpBar.style.display = "none";
   document.querySelector("#enemy-avatar .health-text").style.display = "none";
+  inventoryDiv.style.display = "none"; // Скрываем инвентарь в деревне
+  talkButton.style.display = "block"; // Показываем кнопку "Поговорить"
   changeBackground(currentLocation);
 
   // Начальное сообщение
@@ -416,7 +776,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("move-ruins").disabled = true;
 
     // Показываем врага
-    currentEnemy = JSON.parse(JSON.stringify(characters.enemies.forest)); // Создаем копию врага с полным здоровьем
+    currentEnemy = JSON.parse(JSON.stringify(characters.enemies.forest));
     currentNPC = null;
     changeAvatar(currentEnemy.avatar, currentEnemy.name);
     enemyAvatar.style.display = "block";
@@ -427,6 +787,8 @@ document.addEventListener("DOMContentLoaded", () => {
     enemyHpText.textContent = currentEnemy.hp;
     enemyMaxHpText.textContent = currentEnemy.maxHp;
     actions.style.display = "flex";
+    inventoryDiv.style.display = "block"; // Показываем инвентарь
+    talkButton.style.display = "none"; // Скрываем кнопку "Поговорить"
     changeBackground(currentLocation);
     isPlayerTurn = true;
     addLog("Ваш ход!");
@@ -456,6 +818,8 @@ document.addEventListener("DOMContentLoaded", () => {
     enemyHpBar.style.display = "none";
     document.querySelector("#enemy-avatar .health-text").style.display = "none";
     actions.style.display = "none";
+    inventoryDiv.style.display = "none"; // Скрываем инвентарь
+    talkButton.style.display = "block"; // Показываем кнопку "Поговорить"
     changeBackground(currentLocation);
     saveProgress();
   });
@@ -469,7 +833,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("move-ruins").disabled = true;
 
     // Показываем врага (Скелет)
-    currentEnemy = JSON.parse(JSON.stringify(characters.enemies.ruins)); // Создаем копию врага с полным здоровьем
+    currentEnemy = JSON.parse(JSON.stringify(characters.enemies.ruins));
     currentNPC = null;
     changeAvatar(currentEnemy.avatar, currentEnemy.name);
     enemyAvatar.style.display = "block";
@@ -480,6 +844,8 @@ document.addEventListener("DOMContentLoaded", () => {
     enemyHpText.textContent = currentEnemy.hp;
     enemyMaxHpText.textContent = currentEnemy.maxHp;
     actions.style.display = "flex";
+    inventoryDiv.style.display = "block"; // Показываем инвентарь
+    talkButton.style.display = "none"; // Скрываем кнопку "Поговорить"
     changeBackground(currentLocation);
     isPlayerTurn = true;
     addLog("Ваш ход!");
@@ -541,6 +907,13 @@ document.addEventListener("DOMContentLoaded", () => {
     currentLocation = "village";
     isPlayerTurn = true;
 
+    // Сбрасываем квесты
+    Object.keys(quests).forEach((questId) => {
+      quests[questId].active = false;
+      quests[questId].completed = false;
+      quests[questId].current = 0;
+    });
+
     // Очищаем localStorage
     localStorage.removeItem("gameProgress");
 
@@ -556,6 +929,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("move-forest").disabled = false;
     document.getElementById("move-village").disabled = true;
     document.getElementById("move-ruins").disabled = false;
+    inventoryDiv.style.display = "none"; // Скрываем инвентарь
+    talkButton.style.display = "block"; // Показываем кнопку "Поговорить"
 
     // Очищаем журнал событий
     const events = document.getElementById("events");
@@ -566,6 +941,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Обновляем интерфейс
     updateInventory();
+    updateQuestsUI();
     updateUI();
   };
 
