@@ -50,26 +50,27 @@ body.sfchik-cave-bg {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px;
+    padding: 5px;
     max-width: 500px;
-    margin: 20px auto;
+    margin: 5px auto;
     z-index: 1;
 }
 
 h1, h2 {
     text-align: center;
-    margin: 10px 0;
+    margin: 1px 0;
 }
 
 button {
     background-color: #FF5555;
     color: #FFFFFF;
     border: none;
-    padding: 10px 20px;
+    padding: 5px 15px;
     margin: 5px;
     cursor: pointer;
     font-family: 'Press Start 2P', cursive;
     font-size: 12px;
+    border-radius: 5px;
 }
 
 button:hover {
@@ -118,11 +119,11 @@ header h1 {
 
 .progress-text {
     position: absolute;
-    top: 50%;
+    top: 40%;
     left: 50%;
     transform: translate(-50%, -50%);
     color: #FFFFFF;
-    font-size: 10px;
+    font-size: 13px;
     text-shadow: 1px 1px 1px #000000; /* Тень для читаемости */
     white-space: nowrap;
 }
@@ -130,7 +131,7 @@ header h1 {
 /* Контейнер для характеристик и аватарок */
 .character-section {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     width: 80%;
     max-width: 600px;
     gap: 20px;
@@ -139,9 +140,12 @@ header h1 {
 
 /* Характеристики */
 #stats {
-    padding: 10px;
+    padding: 0 10px;
     max-width: 200px;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
 }
 
 /* Аватарки и полосы здоровья */
@@ -150,6 +154,7 @@ header h1 {
     height: 80px;
     border: 2px solid #FFD700;
     transition: opacity 0.3s ease; /* Плавный переход для смены аватарки */
+
 }
 
 #enemy-avatar img {
@@ -161,11 +166,12 @@ header h1 {
 }
 
 
+
 .health-bar {
     position: relative;
     background-color: #555;
     height: 20px; /* Увеличиваем высоту для текста */
-    width: 80px;
+    width: 100px;
     border: 2px solid #FFD700;
     margin-bottom: 5px;
 }
@@ -188,7 +194,7 @@ header h1 {
     left: 50%;
     transform: translate(-50%, -50%);
     color: #FFFFFF;
-    font-size: 8px;
+    font-size: 10px;
     text-shadow: 1px 1px 1px #000000; /* Тень для читаемости */
     white-space: nowrap;
 }
@@ -197,17 +203,27 @@ header h1 {
     width: 80px;
     height: 80px;
     border: 2px solid #FFD700;
+
+}
+
+#player-avatar, #enemy-avatar  {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#enemy-avatar {
+    display: flex !important;
 }
 
 /* Инвентарь */
 #inventory {
     background-color: #3F3F3F;
-    padding: 10px;
+    padding: 5px;
     border: 2px solid #FFD700;
     width: 80%;
     max-width: 400px;
     text-align: left;
-    margin-bottom: 10px;
 }
 
 
@@ -218,7 +234,7 @@ header h1 {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 10px;
+    gap: 0 10px;
 }
 #items .item {
     cursor: pointer;
@@ -257,7 +273,7 @@ header h1 {
 /* Локация и переходы */
 #location {
     background-color: #3F3F3F;
-    padding: 10px;
+    padding: 5px;
     border: 2px solid #FFD700;
     width: 80%;
     max-width: 400px;
@@ -265,10 +281,13 @@ header h1 {
     margin-bottom: 10px;
 }
 
+
+
 #location-actions {
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
+    margin-top: 5px;
 }
 
 /* Журнал действий */
@@ -319,11 +338,10 @@ header h1 {
 }
 
 #quests {
-        margin-bottom: 20px;
-    display: flex
-;
+    display: flex;
     flex-direction: column;
     align-items: center;
+    margin-bottom: 10px;
 }
 
 #active-quests {
@@ -358,9 +376,24 @@ header h1 {
     background: #45a049;
 }
 
+@media (max-width: 480px) {
+ #stats {
+        width: 90%;
+        max-width: 200px;
+        padding: 0 0;
+ }
+ #active-quests {
+    padding: 5px;
+ }
+}
 
+@media (max-width: 484px) {
+ #inventory .item {
+       font-size: 12px;
+ }
+}
 /* Адаптивность для мобильных устройств */
-@media (max-width: 400px) {
+@media (max-width: 455px) {
     .game-container {
         padding: 10px;
     }
@@ -371,32 +404,28 @@ header h1 {
         padding: 8px 16px;
         font-size: 10px;
     }
-    .character-section {
-        align-items: center;
-    }
-    #stats {
-        width: 90%;
-        max-width: 250px;
-    }
+    
+    
     #player-avatar, #enemy-avatar {
-        margin: 10px 0;
+        margin: 1px 0;
+
     }
     #player-avatar img, #enemy-avatar img {
         width: 60px;
         height: 60px;
     }
     .health-bar {
-        width: 60px;
+        width: 71px;
         height: 18px;
     }
     .health-text {
-        font-size: 6px;
+        font-size: 8px;
     }
     .progress-bar {
         height: 18px;
     }
     .progress-text {
-        font-size: 8px;
+        font-size: 12px;
     }
     #inventory, #location, #log {
         width: 90%;
@@ -407,4 +436,27 @@ header h1 {
     header h1 {
         font-size: 16px;
     }
+}
+
+@media (max-width: 358px) {
+    .health-bar {
+        width: 60px;
+        height: 18px;
+    }
+    .health-text {
+        font-size: 6px;
+    }
+    header h1 {
+    font-size: 12px;
+    }
+    #stats {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 391px) {
+#inventory .item {
+       font-size: 10px;
+       padding: 1px;
+ }
 }
