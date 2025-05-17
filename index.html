@@ -1,112 +1,138 @@
 <!DOCTYPE html>
 <html lang="ru">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline';"
+    />
+    <meta name="description" content="Эридан: Последний Страж - RPG игра" />
     <title>Эридан: Последний Страж</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
 
-<body class="village-bg">
+  <body class="village-bg">
     <div class="game-container">
-        <!-- Название и кнопка рестарта -->
-        <header>
-            <h1>Эридан: Последний Страж</h1>
-            <button id="reset">Рестарт</button>
-        </header>
+      <!-- Название и кнопка рестарта -->
+      <header>
+        <h1>Эридан: Последний Страж</h1>
+        <button id="reset">Рестарт</button>
+      </header>
 
-        <!-- Полоса уровня -->
-        <section id="level-bar">
-            <div class="progress-bar">
-                <div id="xp-bar" style="width: 0%;"></div>
-                <div class="progress-text">
-                    Уровень: <span id="level">1</span> | Опыт: <span id="xp">0</span>/<span id="required-xp">100</span>
-                </div>
+      <!-- Полоса уровня -->
+      <section id="level-bar">
+        <div class="progress-bar">
+          <div id="xp-bar" style="width: 0%"></div>
+          <div class="progress-text">
+            Уровень: <span id="level">1</span> | Опыт:
+            <span id="xp">0</span>/<span id="required-xp">100</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Контейнер для характеристик и аватарок -->
+      <section class="character-section">
+        <div id="player-avatar">
+          <div class="health-bar">
+            <div id="player-hp-bar" style="width: 100%"></div>
+            <div class="health-text">
+              Здоровье: <span id="player-hp">100</span>/<span id="player-max-hp"
+                >100</span
+              >
             </div>
-        </section>
-
-        <!-- Контейнер для характеристик и аватарок -->
-        <section class="character-section">
-            <div id="player-avatar">
-                <div class="health-bar">
-                    <div id="player-hp-bar" style="width: 100%;"></div>
-                    <div class="health-text">Здоровье: <span id="hp">100</span>/<span id="max-hp">100</span></div>
-                </div>
-                <img src="image/player.png" alt="Герой">
-
-            </div>
-
-            <div id="stats">
-                <span>HP: <span id="hp">100</span>/<span id="max-hp">100</span></span>
-                <span>MP: <span id="mp">50</span>/<span id="max-mp">50</span></span>
-                <span>STR: <span id="str">10</span></span>
-                <span>DEF: <span id="def">5</span></span>
-                <span>AGI: <span id="agi">8</span></span>
-            </div>
-            
-
-
-            <div id="enemy-avatar">
-                <div class="health-bar">
-                    <div id="enemy-hp-bar" style="width: 0%;"></div>
-                    <div class="health-text">Здоровье: <span id="enemy-hp">50</span>/<span id="enemy-max-hp">50</span>
-                    </div>
-                </div>
-                <img src="enemy.png" alt="Враг">
-            </div>
-        </section>
-
-       
-        <!-- Секция активных квестов -->
-        <div id="quests">
-            <h2>Активные квесты</h2>
-            <div id="active-quests"></div>
-            <button id="talk-button" style="display: none;">Поговорить</button>
+          </div>
+          <img src="image/player.png" alt="Герой" />
         </div>
 
-        <!-- Инвентарь -->
-        <section id="inventory">
-            <div id="items">
-                <div class="item" data-type="health">Зелье здоровья: <span id="health-potion">1</span></div>
-                <div class="item" data-type="strength">Зелье силы: <span id="strength-potion">1</span></div>
-                <div class="item" data-type="defense">Зелье защиты: <span id="defense-potion">1</span></div>
-                <div class="item" data-type="agility">Зелье ловкости: <span id="agility-potion">1</span></div>
-                <div class="item" data-type="mana">Зелье маны: <span id="mana-potion">1</span></div>
+        <div id="stats">
+          <span
+            >HP: <span id="stats-hp">100</span>/<span id="stats-max-hp"
+              >100</span
+            ></span
+          >
+          <span
+            >MP: <span id="stats-mp">50</span>/<span id="stats-max-mp"
+              >50</span
+            ></span
+          >
+          <span>STR: <span id="stats-str">10</span></span>
+          <span>DEF: <span id="stats-def">5</span></span>
+          <span>AGI: <span id="stats-agi">8</span></span>
+        </div>
+
+        <div id="enemy-avatar">
+          <div class="health-bar">
+            <div id="enemy-hp-bar" style="width: 0%"></div>
+            <div class="health-text">
+              Здоровье: <span id="enemy-hp">50</span>/<span id="enemy-max-hp"
+                >50</span
+              >
             </div>
-        </section>
+          </div>
+          <img src="image/goblin.png" alt="Враг" />
+        </div>
+      </section>
 
-        <!-- Кнопки управления -->
-        <section id="actions">
-            <button id="attack">Атаковать</button>
-            <button id="defend">Защищаться</button>
-            <button id="useItem">Исп. предмет</button>
-        </section>
+      <!-- Секция активных квестов -->
+      <div id="quests">
+        <h2>Активные квесты</h2>
+        <div id="active-quests"></div>
+        <button id="talk-button" style="display: none">Поговорить</button>
+      </div>
 
-        <!-- Локация и переходы -->
-        <section id="location">
-            <span id="desc">Вы в Деревне, безопасной зоне.</span>
-            <div id="location-actions">
-                <button id="move-village" disabled>Вернуться в Деревню</button>
-                <button id="move-forest">Идти в Мрачный Лес</button>
-                <button id="move-ruins">Идти в Руины</button>
-                <button id="move-sfcfik-cave">Перейти в Пещеру СФчика</button>
-            </div>
-        </section>
+      <!-- Инвентарь -->
+      <section id="inventory">
+        <div id="items">
+          <div class="item" data-type="health">
+            Зелье здоровья: <span id="health-potion">1</span>
+          </div>
+          <div class="item" data-type="strength">
+            Зелье силы: <span id="strength-potion">1</span>
+          </div>
+          <div class="item" data-type="defense">
+            Зелье защиты: <span id="defense-potion">1</span>
+          </div>
+          <div class="item" data-type="agility">
+            Зелье ловкости: <span id="agility-potion">1</span>
+          </div>
+          <div class="item" data-type="mana">
+            Зелье маны: <span id="mana-potion">1</span>
+          </div>
+        </div>
+      </section>
 
-        <!-- Журнал действий -->
-        <section id="log">
-            <div id="events"></div>
-        </section>
+      <!-- Кнопки управления -->
+      <section id="actions">
+        <button id="attack">Атаковать</button>
+        <button id="defend">Защищаться</button>
+        <button id="useItem">Исп. предмет</button>
+      </section>
+
+      <!-- Локация и переходы -->
+      <section id="location">
+        <span id="desc">Вы в Деревне, безопасной зоне.</span>
+        <div id="location-actions">
+          <button id="move-village" disabled>Вернуться в Деревню</button>
+          <button id="move-forest">Идти в Мрачный Лес</button>
+          <button id="move-ruins">Идти в Руины</button>
+          <button id="move-sfcfik-cave">Перейти в Пещеру СФчика</button>
+        </div>
+      </section>
+
+      <!-- Журнал действий -->
+      <section id="log">
+        <div id="events"></div>
+      </section>
     </div>
     <!-- Модальное окно для диалогов -->
     <div id="dialogue-modal" class="modal hidden">
-        <div class="modal-content">
-            <p id="dialogue-text"></p>
-            <div id="dialogue-options"></div>
-        </div>
+      <div class="modal-content">
+        <p id="dialogue-text"></p>
+        <div id="dialogue-options"></div>
+      </div>
     </div>
     <script src="game.js" defer></script>
-</body>
-
+  </body>
 </html>

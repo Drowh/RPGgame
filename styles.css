@@ -1,10 +1,29 @@
+/* Переменные для цветов и размеров */
+:root {
+    --main-text-color: #FFD700;
+    --bg-color: #2F2F2F;
+    --button-color: #FF5555;
+    --button-hover-color: #FF7777;
+    --disabled-color: #888;
+    --hp-bar-color: #FF0000;
+    --xp-bar-color: #00FF00;
+    --secondary-bg-color: #3F3F3F;
+    --border-color: #FFD700;
+    --potion-border-color: rgb(255, 157, 0);
+    --potion-text-color: rgb(85, 224, 255);
+    --potion-highlight-bg: rgb(16, 132, 171);
+    --container-max-width: 500px;
+    --avatar-size: 80px;
+    --health-bar-height: 20px;
+}
+
 /* Общие стили */
 /* Фоны для локаций */
 body {
     margin: 0;
     padding: 0;
-    background-color: #2F2F2F;
-    color: #FFD700;
+    background-color: var(--bg-color);
+    color: var(--main-text-color);
     font-family: 'Press Start 2P', cursive;
     font-size: 14px;
     background-size: cover;
@@ -51,7 +70,7 @@ body.sfchik-cave-bg {
     flex-direction: column;
     align-items: center;
     padding: 5px;
-    max-width: 500px;
+    max-width: var(--container-max-width);
     margin: 5px auto;
     z-index: 1;
 }
@@ -62,7 +81,7 @@ h1, h2 {
 }
 
 button {
-    background-color: #FF5555;
+    background-color: var(--button-color);
     color: #FFFFFF;
     border: none;
     padding: 5px 15px;
@@ -74,11 +93,11 @@ button {
 }
 
 button:hover {
-    background-color: #FF7777;
+    background-color: var(--button-hover-color);
 }
 
 button:disabled {
-    background-color: #888;
+    background-color: var(--disabled-color);
     cursor: not-allowed;
 }
 
@@ -107,19 +126,19 @@ header h1 {
 .progress-bar {
     position: relative;
     background-color: #555;
-    height: 20px; /* Увеличиваем высоту для текста */
-    border: 2px solid #FFD700;
+    height: var(--health-bar-height);
+    border: 2px solid var(--border-color);
 }
 
 #xp-bar {
-    background-color: #00FF00;
+    background-color: var(--xp-bar-color);
     height: 100%;
     transition: width 0.3s;
 }
 
 .progress-text {
     position: absolute;
-    top: 40%;
+    top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     color: #FFFFFF;
@@ -150,11 +169,10 @@ header h1 {
 
 /* Аватарки и полосы здоровья */
 #player-avatar img, #enemy-avatar img {
-    width: 80px;
-    height: 80px;
-    border: 2px solid #FFD700;
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+    border: 2px solid var(--border-color);
     transition: opacity 0.3s ease; /* Плавный переход для смены аватарки */
-
 }
 
 #enemy-avatar img {
@@ -165,25 +183,23 @@ header h1 {
     opacity: 0;
 }
 
-
-
 .health-bar {
     position: relative;
     background-color: #555;
-    height: 20px; /* Увеличиваем высоту для текста */
+    height: var(--health-bar-height);
     width: 100px;
-    border: 2px solid #FFD700;
+    border: 2px solid var(--border-color);
     margin-bottom: 5px;
 }
 
 #player-hp-bar {
-    background-color: #FF0000;
+    background-color: var(--hp-bar-color);
     height: 100%;
     transition: width 0.3s;
 }
 
 #enemy-hp-bar {
-    background-color: #FF0000;
+    background-color: var(--hp-bar-color);
     height: 100%;
     transition: width 0.3s;
 }
@@ -200,10 +216,9 @@ header h1 {
 }
 
 #player-avatar img, #enemy-avatar img {
-    width: 80px;
-    height: 80px;
-    border: 2px solid #FFD700;
-
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+    border: 2px solid var(--border-color);
 }
 
 #player-avatar, #enemy-avatar  {
@@ -218,18 +233,15 @@ header h1 {
 
 /* Инвентарь */
 #inventory {
-    background-color: #3F3F3F;
+    background-color: var(--secondary-bg-color);
     padding: 5px;
-    border: 2px solid #FFD700;
+    border: 2px solid var(--border-color);
     width: 80%;
     max-width: 400px;
     text-align: left;
 }
 
-
-
 /* Стили для инвентаря */
-
 #items{
     display: flex;
     flex-wrap: wrap;
@@ -240,12 +252,12 @@ header h1 {
     cursor: pointer;
     padding: 5px;
     margin: 2px 0;
-    border: 1px solid rgb(255, 157, 0);
-    color:rgb(85, 224, 255)
+    border: 1px solid var(--potion-border-color);
+    color: var(--potion-text-color)
 }
 
 #items .item.highlighted {
-    background-color:rgb(16, 132, 171);
+    background-color: var(--potion-highlight-bg);
     color: #FFFFFF;
 }
 
@@ -272,16 +284,14 @@ header h1 {
 
 /* Локация и переходы */
 #location {
-    background-color: #3F3F3F;
+    background-color: var(--secondary-bg-color);
     padding: 5px;
-    border: 2px solid #FFD700;
+    border: 2px solid var(--border-color);
     width: 80%;
     max-width: 400px;
     text-align: center;
     margin-bottom: 10px;
 }
-
-
 
 #location-actions {
     display: flex;
@@ -292,9 +302,9 @@ header h1 {
 
 /* Журнал действий */
 #log {
-    background-color: #3F3F3F;
+    background-color: var(--secondary-bg-color);
     padding: 10px;
-    border: 2px solid #FFD700;
+    border: 2px solid var(--border-color);
     width: 80%;
     max-width: 400px;
     text-align: left;
